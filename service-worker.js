@@ -1,4 +1,4 @@
-const CACHE_NAME = 'adb-administrativo-v3-controle-financeiro-2026';
+const CACHE_NAME = 'adb-administrativo-v4-planilhas-responsivas';
 const ASSETS = [
   './',
   './index.html',

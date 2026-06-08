@@ -1,15 +1,15 @@
-Atualização ADB Administrativo - Controle Financeiro 2026
+ADB Administrativo - Atualização Planilhas Responsivas
 
-Para atualizar no GitHub:
-1. Envie os arquivos desta pasta para o mesmo repositório.
-2. Substitua os arquivos antigos quando o GitHub perguntar.
+Alterações:
+- Todas as URLs do Google Sheets agora abrem em modo de ajuste dentro do navegador interno do app.
+- Adicionado controle de visualização para planilhas: Ajustar à tela, zoom -/+, e 100%.
+- Mantido o layout visual principal do app.
+
+Como atualizar no GitHub:
+1. Envie todos os arquivos desta pasta para o mesmo repositório.
+2. Confirme a substituição dos arquivos antigos.
 3. Clique em Commit changes.
-4. Aguarde alguns minutos o GitHub Pages atualizar.
+4. Aguarde alguns minutos e reabra o app no iPhone.
 
-Arquivos principais:
-- index.html
-- manifest.webmanifest
-- service-worker.js
-- pasta icons
-
-No iPhone, se o app ainda mostrar a versão antiga, feche e abra novamente. Se persistir, remova da tela inicial e adicione novamente pelo Safari.
+Observação:
+O ajuste é aplicado ao iframe inteiro da planilha para permitir visualizar mais colunas no celular.

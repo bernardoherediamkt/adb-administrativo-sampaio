@@ -505,6 +505,61 @@
       background: #fffaf0;
     }
 
+    .browser-page.sheet-fit .browser-shell {
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    .browser-page.sheet-fit .browser-frame {
+      transform-origin: top left;
+      transition: transform .16s ease, width .16s ease, height .16s ease;
+    }
+
+    .sheet-tools {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      background: rgba(36, 33, 29, .96);
+      border-top: 1px solid rgba(255, 255, 255, .10);
+      color: var(--off-white);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .browser-page.sheet-fit .sheet-tools { display: flex; }
+
+    .sheet-pill {
+      flex: 0 0 auto;
+      min-height: 34px;
+      padding: 0 11px;
+      border-radius: 999px;
+      color: var(--off-white);
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.13);
+      font-size: 11px;
+      font-weight: 850;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .sheet-pill.is-active {
+      background: var(--off-white);
+      color: var(--black);
+    }
+
+    .sheet-hint {
+      flex: 1 0 180px;
+      color: rgba(243, 240, 231, .72);
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
     .loading {
       position: absolute;
       inset: 0;
@@ -744,7 +799,14 @@
         <button type="button" class="mini-btn" onclick="reloadBrowser()">Recarregar</button>
       </div>
     </div>
-    <div class="browser-shell">
+    <div class="sheet-tools" id="sheetTools" aria-label="Ajuste de visualização da planilha">
+      <button type="button" class="sheet-pill" onclick="zoomSheet(-0.08)">−</button>
+      <button type="button" class="sheet-pill is-active" id="fitSheetBtn" onclick="fitSheetToScreen()">Ajustar à tela</button>
+      <button type="button" class="sheet-pill" onclick="zoomSheet(0.08)">+</button>
+      <button type="button" class="sheet-pill" onclick="setSheetZoom(1)">100%</button>
+      <span class="sheet-hint">Modo planilha: visualize mais colunas na tela do celular.</span>
+    </div>
+    <div class="browser-shell" id="browserShell">
       <iframe class="browser-frame" id="browserFrame" title="Navegador interno ADB" allow="fullscreen; clipboard-read; clipboard-write"></iframe>
       <div class="loading" id="loadingLayer">Carregando dentro do app...</div>
     </div>
@@ -753,31 +815,98 @@
   <script>
     const mainMenu = document.getElementById('mainMenu');
     const browserPage = document.getElementById('browserPage');
+    const browserShell = document.getElementById('browserShell');
     const browserFrame = document.getElementById('browserFrame');
     const browserTitle = document.getElementById('browserTitle');
     const browserSubtitle = document.getElementById('browserSubtitle');
     const loadingLayer = document.getElementById('loadingLayer');
+    const fitSheetBtn = document.getElementById('fitSheetBtn');
     let currentUrl = '';
+    let currentIsSheet = false;
+    let currentSheetScale = 1;
+
+    function isSpreadsheetUrl(url) {
+      return /docs\.google\.com\/spreadsheets\//i.test(url || '');
+    }
+
+    function prepareGoogleSheetUrl(url) {
+      if (!isSpreadsheetUrl(url)) return url;
+      try {
+        const parsed = new URL(url);
+        if (!parsed.searchParams.has('rm')) parsed.searchParams.set('rm', 'minimal');
+        return parsed.toString();
+      } catch (error) {
+        return url;
+      }
+    }
+
+    function getFitScale() {
+      const width = window.innerWidth || document.documentElement.clientWidth || 390;
+      if (width <= 380) return 0.62;
+      if (width <= 430) return 0.66;
+      if (width <= 640) return 0.72;
+      if (width <= 900) return 0.82;
+      return 1;
+    }
+
+    function applySheetZoom(scale) {
+      if (!currentIsSheet) return;
+      const safeScale = Math.max(0.52, Math.min(1.15, Number(scale) || 1));
+      currentSheetScale = safeScale;
+      browserFrame.style.transform = 'scale(' + safeScale + ')';
+      browserFrame.style.transformOrigin = '0 0';
+      browserFrame.style.width = (100 / safeScale) + '%';
+      browserFrame.style.height = (100 / safeScale) + '%';
+      if (fitSheetBtn) {
+        fitSheetBtn.classList.toggle('is-active', Math.abs(safeScale - getFitScale()) < 0.02);
+      }
+    }
+
+    function fitSheetToScreen() {
+      applySheetZoom(getFitScale());
+      if (browserShell) browserShell.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    }
+
+    function setSheetZoom(scale) {
+      applySheetZoom(scale);
+    }
+
+    function zoomSheet(delta) {
+      applySheetZoom(currentSheetScale + delta);
+    }
+
+    function resetBrowserZoom() {
+      browserFrame.style.transform = '';
+      browserFrame.style.width = '100%';
+      browserFrame.style.height = '100%';
+      currentSheetScale = 1;
+    }
 
     function openBrowser(url, title, subtitle) {
-      currentUrl = url;
+      currentIsSheet = isSpreadsheetUrl(url);
+      currentUrl = prepareGoogleSheetUrl(url);
       browserTitle.textContent = title || 'ADB Administrativo';
-      browserSubtitle.textContent = subtitle || 'Abrindo dentro do app';
+      browserSubtitle.textContent = currentIsSheet ? 'Planilha ajustada para a tela' : (subtitle || 'Abrindo dentro do app');
       loadingLayer.classList.add('is-visible');
       browserPage.classList.add('is-open');
+      browserPage.classList.toggle('sheet-fit', currentIsSheet);
       browserPage.setAttribute('aria-hidden', 'false');
       mainMenu.style.display = 'none';
       document.body.style.overflow = 'hidden';
       browserFrame.src = 'about:blank';
+      resetBrowserZoom();
+      if (currentIsSheet) applySheetZoom(getFitScale());
       setTimeout(function () {
-        browserFrame.src = url;
+        browserFrame.src = currentUrl;
       }, 70);
     }
 
     function closeBrowser() {
       browserFrame.src = 'about:blank';
       currentUrl = '';
-      browserPage.classList.remove('is-open');
+      currentIsSheet = false;
+      resetBrowserZoom();
+      browserPage.classList.remove('is-open', 'sheet-fit');
       browserPage.setAttribute('aria-hidden', 'true');
       mainMenu.style.display = '';
       document.body.style.overflow = '';
@@ -789,8 +918,13 @@
       if (!currentUrl) return;
       loadingLayer.classList.add('is-visible');
       browserFrame.src = 'about:blank';
+      if (currentIsSheet) applySheetZoom(currentSheetScale || getFitScale());
       setTimeout(function () { browserFrame.src = currentUrl; }, 50);
     }
+
+    window.addEventListener('resize', function () {
+      if (currentIsSheet && fitSheetBtn && fitSheetBtn.classList.contains('is-active')) fitSheetToScreen();
+    });
 
     browserFrame.addEventListener('load', function () {
       setTimeout(function () { loadingLayer.classList.remove('is-visible'); }, 350);
