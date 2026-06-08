@@ -1820,7 +1820,7 @@ Se houver foto do preletor enviada, preserve a identidade visual da pessoa e use
         const imageUrl = imageBase64.startsWith('data:') ? imageBase64 : ('data:' + mimeType + ';base64,' + imageBase64);
 
         previewBox.innerHTML = '<div style="width:100%;display:grid;gap:14px;"><img src="' + imageUrl + '" alt="Arte gerada pelo ADB Mídia-Designer"><a class="btn" href="' + imageUrl + '" download="arte-adb-midia-designer.png" style="justify-content:center;text-decoration:none;">Baixar Arte</a></div>';
-        statusArte.textContent = 'Arte gerada com sucesso dentro do app. Você pode baixar ou gerar outra variação.';
+        statusArte.textContent = resultado.text || 'Arte gerada com sucesso dentro do app. Você pode baixar ou gerar outra variação.';
       } catch (error) {
         renderPromptPreview();
         statusArte.textContent = 'Erro: ' + error.message;
