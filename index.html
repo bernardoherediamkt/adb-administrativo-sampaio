@@ -1074,6 +1074,202 @@
       .upload-actions .btn { width: 100%; justify-content: center; }
     }
 
+
+    /* Adam Assistente Virtual - modo HTML estático */
+    .adam-widget {
+      position: relative;
+      margin: 24px 0 34px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(138, 100, 71, .14), transparent 34%),
+        linear-gradient(135deg, rgba(255, 252, 244, .92), rgba(235, 229, 216, .74));
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+    }
+
+    .adam-widget::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(255,255,255,.38), transparent 45%, rgba(138,100,71,.08));
+      pointer-events: none;
+    }
+
+    .adam-head, .adam-messages, .adam-form, .adam-quick {
+      position: relative;
+      z-index: 1;
+    }
+
+    .adam-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .adam-title {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .adam-avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: var(--black);
+      color: var(--off-white);
+      box-shadow: 0 14px 25px rgba(36, 33, 29, .22);
+      flex: 0 0 auto;
+    }
+
+    .adam-avatar svg { width: 23px; height: 23px; stroke-width: 2; }
+
+    .adam-title h2 {
+      font-size: clamp(20px, 3vw, 28px);
+      line-height: 1;
+      margin: 0;
+      letter-spacing: -.04em;
+      color: var(--black);
+    }
+
+    .adam-title p {
+      margin: 5px 0 0;
+      color: rgba(36, 33, 29, .62);
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .adam-badge {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(138,100,71,.22);
+      color: var(--brown-dark);
+      background: rgba(255,255,255,.42);
+      font-weight: 900;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      white-space: nowrap;
+    }
+
+    .adam-messages {
+      display: grid;
+      gap: 10px;
+      max-height: 280px;
+      overflow: auto;
+      padding: 12px;
+      border-radius: 24px;
+      background: rgba(255, 252, 244, .54);
+      border: 1px solid rgba(36, 33, 29, .08);
+      scroll-behavior: smooth;
+    }
+
+    .adam-message {
+      max-width: 88%;
+      padding: 12px 14px;
+      border-radius: 18px;
+      font-size: 14px;
+      line-height: 1.48;
+      font-weight: 650;
+      box-shadow: 0 10px 20px rgba(36, 33, 29, .05);
+      white-space: pre-wrap;
+    }
+
+    .adam-message.bot {
+      justify-self: start;
+      background: rgba(255, 255, 255, .7);
+      color: rgba(36, 33, 29, .82);
+      border: 1px solid rgba(36, 33, 29, .08);
+      border-bottom-left-radius: 6px;
+    }
+
+    .adam-message.user {
+      justify-self: end;
+      background: var(--brown);
+      color: var(--off-white);
+      border-bottom-right-radius: 6px;
+    }
+
+    .adam-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .adam-input {
+      width: 100%;
+      border: 1px solid rgba(36, 33, 29, .12);
+      background: rgba(255, 255, 255, .78);
+      color: var(--black);
+      border-radius: 18px;
+      padding: 15px 16px;
+      font: inherit;
+      font-weight: 750;
+      outline: none;
+      min-height: 54px;
+      resize: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.65);
+    }
+
+    .adam-input:focus {
+      border-color: rgba(138,100,71,.42);
+      box-shadow: 0 0 0 4px rgba(138,100,71,.11);
+    }
+
+    .adam-send {
+      border: 0;
+      min-width: 58px;
+      min-height: 54px;
+      border-radius: 18px;
+      background: var(--black);
+      color: var(--off-white);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      box-shadow: 0 14px 25px rgba(36, 33, 29, .18);
+      transition: transform .18s ease, opacity .18s ease;
+    }
+
+    .adam-send:hover { transform: translateY(-1px); }
+    .adam-send svg { width: 22px; height: 22px; stroke-width: 2.4; }
+
+    .adam-quick {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .adam-chip {
+      border: 1px solid rgba(138, 100, 71, .22);
+      background: rgba(255,255,255,.48);
+      color: var(--brown-dark);
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-weight: 850;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .adam-chip:hover { background: rgba(138,100,71,.10); }
+
+    @media (max-width: 640px) {
+      .adam-widget { margin: 18px 0 26px; padding: 16px; border-radius: 28px; }
+      .adam-head { align-items: flex-start; flex-direction: column; gap: 10px; }
+      .adam-form { grid-template-columns: 1fr; }
+      .adam-send { width: 100%; }
+      .adam-message { max-width: 94%; }
+      .adam-messages { max-height: 240px; }
+    }
+
+
   </style>
 </head>
 <body>
@@ -1088,6 +1284,40 @@
         </div>
       </div>
     </header>
+
+    <section class="adam-widget" aria-label="Adam Assistente Virtual da ADB Sampaio">
+      <div class="adam-head">
+        <div class="adam-title">
+          <div class="adam-avatar" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3l7 4v6c0 5-3.5 7.5-7 8-3.5-.5-7-3-7-8V7l7-4z"></path><path d="M9 12h6"></path><path d="M10 16h4"></path><path d="M8.5 9.5h.01"></path><path d="M15.5 9.5h.01"></path></svg>
+          </div>
+          <div>
+            <h2>Adam Assistente Virtual</h2>
+            <p>Conversa rápida da ADB Sampaio</p>
+          </div>
+        </div>
+        <span class="adam-badge">Gemini + Drive</span>
+      </div>
+
+      <div class="adam-messages" id="adamMessages">
+        <div class="adam-message bot">Paz, Pastor Bernardo. Sou o Adam, Assistente Virtual da ADB Sampaio. Nesta versão para Vercel eu respondo com Gemini e posso consultar a memória bíblica, teológica e administrativa da igreja. Quando o conector do Google Drive estiver configurado, também poderei analisar documentos, planilhas, relatórios financeiros, entradas, saídas e arquivos do ecossistema ministerioadbsampaio@gmail.com.</div>
+      </div>
+
+      <form class="adam-form" id="adamForm">
+        <textarea class="adam-input" id="adamInput" rows="1" placeholder="Escreva aqui... Ex: analise o financeiro de março, me ajude com uma pregação, consulte documentos ou organize a secretaria"></textarea>
+        <button class="adam-send" type="submit" aria-label="Enviar mensagem para o Adam">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
+        </button>
+      </form>
+
+      <div class="adam-quick" aria-label="Sugestões rápidas">
+        <button type="button" class="adam-chip" data-adam="Me ajude a montar uma pregação no padrão da ADB">Pregação</button>
+        <button type="button" class="adam-chip" data-adam="Faça um devocional no padrão do Pastor Bernardo">Devocional</button>
+        <button type="button" class="adam-chip" data-adam="O que temos na agenda da igreja?">Agenda</button>
+        <button type="button" class="adam-chip" data-adam="Analise o movimento financeiro de entradas e saídas">Financeiro</button>
+        <button type="button" class="adam-chip" data-adam="Consulte documentos e cadastros da secretaria">Secretaria</button>
+      </div>
+    </section>
 
     <section class="sections" aria-label="Atalhos administrativos">
       <article class="section">
@@ -1184,7 +1414,7 @@
             <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22a10 10 0 1 1 10-10c0 1.66-1.34 3-3 3h-1.5a2.5 2.5 0 0 0-2.5 2.5V19a3 3 0 0 1-3 3z"></path><circle cx="7.5" cy="10.5" r="1"></circle><circle cx="10.5" cy="7.5" r="1"></circle><circle cx="14.5" cy="7.5" r="1"></circle><circle cx="16.5" cy="10.5" r="1"></circle></svg></div>
             <div><h3>Artes de Eventos</h3><p>Atalho para artes, peças de divulgação e materiais visuais de eventos.</p></div>
             <div class="actions">
-              <button type="button" class="btn" onclick="openDesigner()">Abrir Designer <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 18l6-6-6-6"></path></svg></button>
+              <button type="button" class="btn disabled" disabled>Em breve</button>
             </div>
           </div>
         </div>
@@ -1687,7 +1917,9 @@
         return '- Imagem ' + (index + 1) + ': ' + img.role + ' (' + img.name + '). Use esta imagem como referência visual relevante para a composição.';
       });
 
-      return 'Imagens de apoio enviadas pelo usuário:\n' + linhas.join('\n');
+      return 'Imagens de apoio enviadas pelo usuário:
+' + linhas.join('
+');
     }
 
     function renderPromptPreview() {
@@ -1820,7 +2052,7 @@ Se houver foto do preletor enviada, preserve a identidade visual da pessoa e use
         const imageUrl = imageBase64.startsWith('data:') ? imageBase64 : ('data:' + mimeType + ';base64,' + imageBase64);
 
         previewBox.innerHTML = '<div style="width:100%;display:grid;gap:14px;"><img src="' + imageUrl + '" alt="Arte gerada pelo ADB Mídia-Designer"><a class="btn" href="' + imageUrl + '" download="arte-adb-midia-designer.png" style="justify-content:center;text-decoration:none;">Baixar Arte</a></div>';
-        statusArte.textContent = resultado.text || 'Arte gerada com sucesso dentro do app. Você pode baixar ou gerar outra variação.';
+        statusArte.textContent = 'Arte gerada com sucesso dentro do app. Você pode baixar ou gerar outra variação.';
       } catch (error) {
         renderPromptPreview();
         statusArte.textContent = 'Erro: ' + error.message;
@@ -1840,5 +2072,115 @@ Se houver foto do preletor enviada, preserve a identidade visual da pessoa e use
       });
     }
   </script>
+
+  <script>
+    (function () {
+      const form = document.getElementById('adamForm');
+      const input = document.getElementById('adamInput');
+      const messages = document.getElementById('adamMessages');
+      const chips = document.querySelectorAll('[data-adam]');
+
+      if (!form || !input || !messages) return;
+
+      let adamBusy = false;
+      const history = [];
+
+      function addMessage(text, type) {
+        const bubble = document.createElement('div');
+        bubble.className = 'adam-message ' + (type || 'bot');
+        bubble.textContent = text;
+        messages.appendChild(bubble);
+        messages.scrollTop = messages.scrollHeight;
+        return bubble;
+      }
+
+      function setInputState(disabled) {
+        adamBusy = disabled;
+        input.disabled = disabled;
+        const sendButton = form.querySelector('button[type="submit"]');
+        if (sendButton) sendButton.disabled = disabled;
+      }
+
+      function respostaLocal(question) {
+        const q = String(question || '').toLowerCase();
+
+        if (q.includes('drive') || q.includes('documento') || q.includes('finance') || q.includes('entrada') || q.includes('saída') || q.includes('saida') || q.includes('planilha')) {
+          return 'O Adam está instalado no app. Para eu consultar documentos, planilhas, relatórios financeiros e movimentos de entrada/saída do Drive, configure na Vercel as variáveis ADAM_DRIVE_WEBAPP_URL e ADAM_DRIVE_TOKEN depois de publicar o conector do Google Apps Script na conta ministerioadbsampaio@gmail.com.';
+        }
+
+        if (q.includes('preg') || q.includes('serm') || q.includes('mensagem')) {
+          return 'Para pregações, vou seguir a memória da ADB: Jesus no centro, Deus como protagonista, linguagem simples e conectiva, texto bíblico central, tópicos bem aplicados, referências bíblicas de apoio e frase final forte.';
+        }
+
+        if (q.includes('devoc')) {
+          return 'Para devocionais, vou seguir o padrão: tema e data, texto bíblico central, reflexão detalhada, aplicação prática, oração final encerrando com “Em nome de Jesus, Amém!”, palavra-chave e assinatura Pastor Bernardo.';
+        }
+
+        return 'Estou pronto para responder como Adam. Se a API do Gemini ainda não estiver configurada, respondo em modo local. Depois de configurar GEMINI_API_KEY e o conector do Drive na Vercel, poderei conversar usando a memória bíblica e administrativa da ADB.';
+      }
+
+      async function chamarAdamAPI(text) {
+        const resposta = await fetch('/api/adam-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text,
+            history: history.slice(-8)
+          })
+        });
+
+        let data = {};
+        try { data = await resposta.json(); } catch (error) {}
+
+        if (!resposta.ok) {
+          throw new Error(data.error || data.detail || 'Não foi possível conectar o Adam agora.');
+        }
+
+        return data.answer || data.text || 'Recebi sua pergunta, mas não consegui montar uma resposta.';
+      }
+
+      async function sendAdam(value) {
+        const text = String(value || '').trim();
+        if (!text || adamBusy) return;
+
+        addMessage(text, 'user');
+        history.push({ role: 'user', text: text });
+        input.value = '';
+        setInputState(true);
+
+        const loading = addMessage('Adam está consultando a memória da ADB...', 'bot');
+
+        try {
+          const answer = await chamarAdamAPI(text);
+          loading.textContent = answer;
+          history.push({ role: 'model', text: answer });
+        } catch (error) {
+          loading.textContent = respostaLocal(text) + '\n\nDetalhe técnico: ' + error.message;
+        } finally {
+          setInputState(false);
+          input.focus();
+        }
+      }
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        sendAdam(input.value);
+      });
+
+      input.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault();
+          sendAdam(input.value);
+        }
+      });
+
+      chips.forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          sendAdam(chip.getAttribute('data-adam'));
+        });
+      });
+    })();
+  </script>
+
 </body>
 </html>

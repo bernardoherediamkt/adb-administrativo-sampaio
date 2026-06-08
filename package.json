@@ -1,5 +1,10 @@
 {
-  "name": "adb-administrativo-sampaio",
+  "name": "adb-administrativo-adam-drive",
   "version": "1.0.0",
-  "private": true
+  "private": true,
+  "description": "ADB Administrativo com Adam Assistente Virtual integrado ao Gemini e preparado para Google Drive.",
+  "scripts": {
+    "start": "vercel dev"
+  },
+  "dependencies": {}
 }

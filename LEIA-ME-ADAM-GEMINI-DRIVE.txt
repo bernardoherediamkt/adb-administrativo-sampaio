@@ -1,0 +1,79 @@
+ADB ADMINISTRATIVO - ADAM ASSISTENTE VIRTUAL COM GEMINI + GOOGLE DRIVE
+
+Esta é a versão para Vercel do app principal.
+Ela mantém o layout atual, deixa Artes de Eventos como Em breve, e adiciona o Adam Assistente Virtual com API do Gemini.
+
+O Adam foi preparado para trabalhar com duas camadas de memória:
+
+1. MEMÓRIA BÍBLICA / TEOLÓGICA / PASTORAL
+Arquivos dentro da pasta memoria_adam:
+- ADAM_SYSTEM_PROMPT_ADB_SAMPAIO.txt
+- ADAM_MEMORIA_COMPLETA_ADB_SAMPAIO.md
+- adam_memoria_adb_sampaio.json
+
+2. MEMÓRIA ADMINISTRATIVA DO GOOGLE DRIVE
+Para Adam consultar documentos, planilhas, relatórios financeiros, entradas, saídas e arquivos da conta ministerioadbsampaio@gmail.com, é necessário publicar o conector do Google Apps Script que está em:
+
+google-apps-script/ADAM_DRIVE_BRIDGE.gs
+
+PASSO 1 - SUBIR ESTE PACOTE NO GITHUB
+Suba todos os arquivos e pastas deste pacote na raiz do repositório:
+- index.html
+- package.json
+- vercel.json
+- manifest.webmanifest
+- service-worker.js
+- api/
+- icons/
+- memoria_adam/
+- google-apps-script/
+
+PASSO 2 - CONFIGURAR VARIÁVEIS NA VERCEL
+No projeto da Vercel, em Environment Variables, configure:
+
+GEMINI_API_KEY = sua chave nova do Google AI Studio
+GEMINI_TEXT_MODEL = gemini-3.5-flash
+
+Se gemini-3.5-flash não estiver liberado no seu projeto, você pode trocar para:
+GEMINI_TEXT_MODEL = gemini-3-flash
+ou
+GEMINI_TEXT_MODEL = gemini-2.5-flash
+
+PASSO 3 - PUBLICAR O CONECTOR DO GOOGLE DRIVE
+1. Entre em script.google.com usando a conta ministerioadbsampaio@gmail.com.
+2. Crie um novo projeto.
+3. Cole o conteúdo do arquivo google-apps-script/ADAM_DRIVE_BRIDGE.gs.
+4. Vá em Configurações do projeto > Propriedades do script.
+5. Crie a propriedade:
+   ADAM_DRIVE_TOKEN = um token longo inventado por você
+6. Clique em Implantar > Nova implantação > App da Web.
+7. Executar como: Eu.
+8. Quem pode acessar: Qualquer pessoa com o link.
+9. Copie o link terminado em /exec.
+
+PASSO 4 - LIGAR O DRIVE NA VERCEL
+Volte na Vercel e adicione:
+
+ADAM_DRIVE_WEBAPP_URL = link /exec do Google Apps Script
+ADAM_DRIVE_TOKEN = o mesmo token criado nas Propriedades do Script
+
+Depois clique em Redeploy.
+
+TESTES
+Após publicar, teste:
+
+https://SEU-LINK-VERCEL.vercel.app/api/health
+
+Depois teste:
+
+https://SEU-LINK-VERCEL.vercel.app/api/drive-test
+
+Se estiver tudo certo, abra o app e pergunte ao Adam:
+- Analise o movimento financeiro de março.
+- Consulte documentos administrativos recentes.
+- Mostre um resumo das entradas e saídas.
+- Me ajude com uma pregação no padrão da ADB.
+
+IMPORTANTE
+Não coloque chave de API dentro do index.html ou no GitHub.
+Use sempre Environment Variables da Vercel.

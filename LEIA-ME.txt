@@ -1,0 +1,22 @@
+# ADB Administrativo - Versão HTML Estática com Adam
+
+Esta versão foi preparada para GitHub Pages.
+
+## Alterações desta versão
+- Artes de Eventos ficou como **Em breve**, sem link e sem API ativa.
+- O ADB Mídia-Designer fica guardado para uma etapa futura com API paga.
+- Foi adicionado o widget **Adam Assistente Virtual** abaixo da logo, em modo local/estático.
+- A estrutura de Financeiro, Secretaria, Drive-Mídia e Agenda foi mantida.
+
+## Como publicar no GitHub Pages
+Suba todos os arquivos deste pacote na raiz do repositório e faça Commit changes.
+
+Arquivos principais:
+- index.html
+- manifest.webmanifest
+- service-worker.js
+- pasta icons
+- pasta memoria_adam
+
+## Observação
+O Adam está em modo local porque esta versão não usa backend/API. Para usar Gemini 3.5 Flash futuramente, conecte uma API segura pelo backend e use os arquivos da pasta memoria_adam como base de conhecimento.
