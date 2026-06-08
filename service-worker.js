@@ -1,4 +1,4 @@
-const CACHE_NAME = 'adb-administrativo-v1';
+const CACHE_NAME = 'adb-administrativo-v3-controle-financeiro-2026';
 const ASSETS = [
   './',
   './index.html',
@@ -16,5 +16,9 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 self.addEventListener('fetch', event => {
-  event.respondWith(caches.match(event.request).then(response => response || fetch(event.request)));
+  event.respondWith(fetch(event.request).then(response => {
+    const clone = response.clone();
+    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone)).catch(() => {});
+    return response;
+  }).catch(() => caches.match(event.request)));
 });

@@ -8,6 +8,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="ADB Administrativo" />
   <title>ADB Administrativo</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <style>
     :root {
       --black: #24211d;
@@ -329,6 +331,31 @@
     .btn.secondary { background: var(--brown); }
     .btn.green { background: linear-gradient(135deg, var(--green), var(--green-dark)); }
     .btn.red { background: linear-gradient(135deg, var(--red), var(--red-dark)); }
+
+    .actions.month-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+    }
+
+    .month-btn {
+      width: 100%;
+      min-height: 43px;
+      padding: 11px 12px;
+      border-radius: 14px;
+      font-size: 12.5px;
+    }
+
+    .month-btn.disabled,
+    .month-btn:disabled {
+      color: rgba(36, 33, 29, .48);
+      background: rgba(36, 33, 29, .07);
+      border: 1px solid rgba(36, 33, 29, .08);
+      box-shadow: none;
+      cursor: not-allowed;
+      opacity: .88;
+    }
     .soon {
       display: inline-flex;
       align-items: center;
@@ -593,7 +620,7 @@
             <div class="section-label">Área 01</div>
             <h2>Financeiro</h2>
           </div>
-          <div class="count">2 itens</div>
+          <div class="count">3 itens</div>
         </div>
         <div class="grid">
           <div class="card">
@@ -602,7 +629,25 @@
             <div class="actions">
               <button type="button" class="btn green" onclick="openBrowser('https://docs.google.com/forms/d/e/1FAIpQLScc4Bd1PNdLAWwu_fZxZh42ea48LlZGOgL3qAgJCIFW32qnMQ/viewform?embedded=true', 'Lançamento de Entradas', 'Google Forms')">Lançamento de Entradas <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 18l6-6-6-6"></path></svg></button>
               <button type="button" class="btn red" onclick="openBrowser('https://forms.gle/ubTXjCZsixacdg4p7', 'Lançamento de Saídas', 'Google Forms')">Lançamento de Saídas <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 18l6-6-6-6"></path></svg></button>
-              <button type="button" class="btn secondary" onclick="openBrowser('https://drive.google.com/embeddedfolderview?id=18IlLgEjjGurn2PmEP1qieRvL9k-9vBGM#grid', 'Controle Financeiro', 'Google Drive')">Controle Financeiro <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 18l6-6-6-6"></path></svg></button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18"></path><path d="M7 15l4-4 3 3 5-7"></path><path d="M18 7h1v1"></path></svg></div>
+            <div><h3>Controle Financeiro 2026</h3><p>Planilhas mensais do controle financeiro, organizadas de janeiro a dezembro.</p></div>
+            <div class="actions month-actions">
+              <button type="button" class="btn secondary month-btn" onclick="openBrowser('https://docs.google.com/spreadsheets/d/13jof3g97AsQz26SRHmo53pOxidhZgXWSkWRqd3SFeBo/edit?usp=sharing', 'Janeiro 2026', 'Controle Financeiro')">Janeiro 2026</button>
+              <button type="button" class="btn secondary month-btn" onclick="openBrowser('https://docs.google.com/spreadsheets/d/1sf_jfJ-PKsTN62WUwzAzpruwdaYVRFIeLeKV9h9Psqs/edit?usp=sharing', 'Fevereiro 2026', 'Controle Financeiro')">Fevereiro 2026</button>
+              <button type="button" class="btn secondary month-btn" onclick="openBrowser('https://docs.google.com/spreadsheets/d/11irZSKrZQaIiNT78fLTAbp_WLrCCcOlKeUlcZVce7Hs/edit?usp=sharing', 'Março 2026', 'Controle Financeiro')">Março 2026</button>
+              <button type="button" class="btn secondary month-btn" onclick="openBrowser('https://docs.google.com/spreadsheets/d/1yHpksSYdCaXACUE16sb8gu2B1HZHySe1QqO0EJ1lnDc/edit?usp=sharing', 'Abril 2026', 'Controle Financeiro')">Abril 2026</button>
+              <button type="button" class="btn secondary month-btn" onclick="openBrowser('https://docs.google.com/spreadsheets/d/1wzhKhfRPRUa1ltTu3TTBliLm5c5611-qWniwrVxUfhk/edit?usp=sharing', 'Maio 2026', 'Controle Financeiro')">Maio 2026</button>
+              <button type="button" class="btn secondary month-btn" onclick="openBrowser('https://docs.google.com/spreadsheets/d/1jCBvXixmjT1fhdjYkQSNj806bwUcsfh6bo_mhLLFwEU/edit?usp=sharing', 'Junho 2026', 'Controle Financeiro')">Junho 2026</button>
+              <button type="button" class="btn month-btn disabled" disabled>Julho 2026</button>
+              <button type="button" class="btn month-btn disabled" disabled>Agosto 2026</button>
+              <button type="button" class="btn month-btn disabled" disabled>Setembro 2026</button>
+              <button type="button" class="btn month-btn disabled" disabled>Outubro 2026</button>
+              <button type="button" class="btn month-btn disabled" disabled>Novembro 2026</button>
+              <button type="button" class="btn month-btn disabled" disabled>Dezembro 2026</button>
             </div>
           </div>
 
@@ -754,6 +799,14 @@
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Escape' && browserPage.classList.contains('is-open')) closeBrowser();
     });
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./service-worker.js').catch(function () {});
+      });
+    }
   </script>
 </body>
 </html>
