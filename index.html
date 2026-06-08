@@ -654,6 +654,426 @@
     }
 
     .simple-hero .title-block { max-width: none; }
+
+
+    .designer-page {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: none;
+      color: var(--black);
+      background:
+        radial-gradient(circle at 12% -8%, rgba(138, 100, 71, .24), transparent 25rem),
+        radial-gradient(circle at 90% 0%, rgba(36, 33, 29, .12), transparent 24rem),
+        linear-gradient(135deg, var(--off-white), #faf8ef 55%, var(--off-white-2));
+      overflow: auto;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .designer-page.is-open { display: block; }
+
+    .designer-bar {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
+      background: rgba(36, 33, 29, .96);
+      color: var(--off-white);
+      border-bottom: 1px solid rgba(243, 240, 231, .12);
+      backdrop-filter: blur(18px);
+    }
+
+    .designer-title {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .designer-title strong {
+      font-size: 16px;
+      line-height: 1.15;
+    }
+
+    .designer-title span {
+      margin-top: 3px;
+      font-size: 12px;
+      color: var(--brown-soft);
+    }
+
+    .designer-wrap {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      padding: 22px 18px 38px;
+    }
+
+    .designer-hero {
+      overflow: hidden;
+      position: relative;
+      padding: 26px;
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, rgba(36, 33, 29, .99), rgba(48, 42, 36, .96));
+      color: var(--off-white);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(243, 240, 231, .12);
+    }
+
+    .designer-hero::after {
+      content: "";
+      position: absolute;
+      right: -92px;
+      top: -130px;
+      width: 260px;
+      height: 260px;
+      border-radius: 999px;
+      background: rgba(138, 100, 71, .32);
+    }
+
+    .designer-hero h2 {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      font-size: clamp(30px, 7vw, 58px);
+      line-height: .95;
+      letter-spacing: -.05em;
+    }
+
+    .designer-hero h2 span {
+      display: block;
+      color: var(--brown-soft);
+    }
+
+    .designer-hero p {
+      position: relative;
+      z-index: 1;
+      max-width: 680px;
+      margin: 16px 0 0;
+      color: rgba(243, 240, 231, .76);
+      line-height: 1.65;
+      font-size: 15px;
+    }
+
+    .designer-panel {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, .9fr);
+      gap: 18px;
+    }
+
+    .designer-card {
+      border-radius: var(--radius-lg);
+      background: var(--paper);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-soft);
+      padding: 18px;
+      backdrop-filter: blur(14px);
+    }
+
+    .designer-card h3 {
+      margin: 0 0 14px;
+      font-size: 18px;
+      letter-spacing: -.03em;
+    }
+
+    .designer-form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field-group {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field-group label {
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      color: rgba(36, 33, 29, .62);
+    }
+
+    .designer-form input,
+    .designer-form select,
+    .designer-form textarea {
+      width: 100%;
+      border: 1px solid rgba(36, 33, 29, .14);
+      background: rgba(255, 252, 244, .72);
+      color: var(--black);
+      border-radius: 18px;
+      padding: 14px 14px;
+      outline: none;
+      font-size: 15px;
+    }
+
+    .designer-form textarea {
+      min-height: 122px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    .designer-form input:focus,
+    .designer-form select:focus,
+    .designer-form textarea:focus {
+      border-color: rgba(138, 100, 71, .55);
+      box-shadow: 0 0 0 4px rgba(138, 100, 71, .10);
+    }
+
+    .designer-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .designer-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .designer-status {
+      margin: 12px 0 0;
+      min-height: 22px;
+      color: rgba(36, 33, 29, .68);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .prompt-box {
+      margin-top: 12px;
+      min-height: 220px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: rgba(36, 33, 29, .82);
+      white-space: pre-wrap;
+    }
+
+    .preview-box {
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      min-height: 440px;
+      border-radius: var(--radius-lg);
+      background:
+        linear-gradient(135deg, rgba(36, 33, 29, .92), rgba(48, 42, 36, .94)),
+        radial-gradient(circle at 15% 15%, rgba(138, 100, 71, .28), transparent 18rem);
+      border: 1px solid rgba(36, 33, 29, .12);
+      color: var(--brown-soft);
+      text-align: center;
+      padding: 24px;
+    }
+
+    .preview-box img {
+      width: 100%;
+      max-height: 680px;
+      object-fit: contain;
+      border-radius: 20px;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, .25);
+    }
+
+    .preview-empty strong {
+      display: block;
+      color: var(--off-white);
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+
+    .preview-empty span {
+      display: block;
+      color: rgba(243, 240, 231, .62);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .upload-block {
+      margin-top: 8px;
+      padding: 16px;
+      border-radius: 22px;
+      border: 1px solid rgba(36, 33, 29, .10);
+      background: rgba(255, 252, 244, .62);
+    }
+
+    .upload-block h4 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      letter-spacing: -.02em;
+    }
+
+    .upload-help {
+      margin: 0 0 14px;
+      color: rgba(36, 33, 29, .64);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .upload-drop {
+      display: grid;
+      gap: 4px;
+      justify-items: center;
+      text-align: center;
+      padding: 18px 16px;
+      border-radius: 20px;
+      border: 1.5px dashed rgba(138, 100, 71, .42);
+      background: linear-gradient(135deg, rgba(138, 100, 71, .08), rgba(255, 252, 244, .92));
+      cursor: pointer;
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+
+    .upload-drop:hover {
+      transform: translateY(-1px);
+      border-color: rgba(138, 100, 71, .6);
+      box-shadow: 0 10px 24px rgba(138, 100, 71, .12);
+    }
+
+    .upload-drop strong {
+      font-size: 15px;
+      color: var(--black);
+    }
+
+    .upload-drop span {
+      font-size: 12px;
+      color: rgba(36, 33, 29, .62);
+      line-height: 1.5;
+    }
+
+    .upload-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .upload-list {
+      margin-top: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .upload-empty {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(36, 33, 29, .03);
+      border: 1px solid rgba(36, 33, 29, .08);
+      color: rgba(36, 33, 29, .58);
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .upload-item {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(36, 33, 29, .08);
+      background: rgba(255, 255, 255, .72);
+    }
+
+    .upload-thumb {
+      width: 82px;
+      height: 82px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(36, 33, 29, .08);
+      display: grid;
+      place-items: center;
+    }
+
+    .upload-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .upload-meta {
+      min-width: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .upload-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
+
+    .upload-name strong {
+      display: block;
+      font-size: 14px;
+      color: var(--black);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .upload-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(138, 100, 71, .12);
+      color: var(--brown);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+
+    .upload-sub {
+      font-size: 12px;
+      color: rgba(36, 33, 29, .56);
+      line-height: 1.4;
+    }
+
+    .upload-meta select {
+      width: 100%;
+      border: 1px solid rgba(36, 33, 29, .12);
+      background: rgba(255, 252, 244, .8);
+      color: var(--black);
+      border-radius: 14px;
+      padding: 11px 12px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .upload-meta select:focus {
+      border-color: rgba(138, 100, 71, .55);
+      box-shadow: 0 0 0 4px rgba(138, 100, 71, .10);
+    }
+
+    .designer-note {
+      margin-top: 8px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(36, 33, 29, .04);
+      border: 1px solid rgba(36, 33, 29, .06);
+      color: rgba(36, 33, 29, .68);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 860px) {
+      .designer-panel { grid-template-columns: 1fr; }
+      .preview-box { min-height: 320px; }
+    }
+
+    @media (max-width: 560px) {
+      .designer-row { grid-template-columns: 1fr; }
+      .designer-hero, .designer-card { padding: 16px; }
+      .designer-controls .btn { width: 100%; justify-content: center; }
+      .upload-item { grid-template-columns: 1fr; }
+      .upload-thumb { width: 100%; height: 200px; }
+      .upload-actions .btn { width: 100%; justify-content: center; }
+    }
+
   </style>
 </head>
 <body>
@@ -763,7 +1183,9 @@
           <div class="card">
             <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22a10 10 0 1 1 10-10c0 1.66-1.34 3-3 3h-1.5a2.5 2.5 0 0 0-2.5 2.5V19a3 3 0 0 1-3 3z"></path><circle cx="7.5" cy="10.5" r="1"></circle><circle cx="10.5" cy="7.5" r="1"></circle><circle cx="14.5" cy="7.5" r="1"></circle><circle cx="16.5" cy="10.5" r="1"></circle></svg></div>
             <div><h3>Artes de Eventos</h3><p>Atalho para artes, peças de divulgação e materiais visuais de eventos.</p></div>
-            <div class="actions"><span class="soon">Em breve</span></div>
+            <div class="actions">
+              <button type="button" class="btn" onclick="openDesigner()">Abrir Designer <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 18l6-6-6-6"></path></svg></button>
+            </div>
           </div>
         </div>
       </article>
@@ -805,6 +1227,133 @@
       <div class="loading" id="loadingLayer">Carregando dentro do app...</div>
     </div>
   </section>
+
+
+
+  <section class="designer-page" id="designerPage" aria-hidden="true">
+    <div class="designer-bar">
+      <button type="button" class="back-btn" aria-label="Voltar ao menu principal" onclick="closeDesigner()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M15 18l-6-6 6-6"></path></svg>
+      </button>
+      <div class="designer-title">
+        <strong>ADB Mídia-Designer</strong>
+        <span>Criação de artes dentro do ADB Administrativo</span>
+      </div>
+    </div>
+
+    <div class="designer-wrap">
+      <div class="designer-hero">
+        <h2>Artes de Eventos <span>ADB Sampaio</span></h2>
+        <p>Crie a direção visual da arte dentro do próprio app, seguindo o estilo moderno, premium, editorial, worship e cinematográfico da ADB Sampaio.</p>
+      </div>
+
+      <div class="designer-panel">
+        <div class="designer-card">
+          <h3>Dados da arte</h3>
+          <div class="designer-form">
+            <div class="field-group">
+              <label for="arteTitulo">Título do evento</label>
+              <input id="arteTitulo" placeholder="Ex: Culto de Celebração" />
+            </div>
+
+            <div class="field-group">
+              <label for="arteSubtitulo">Subtítulo ou frase</label>
+              <textarea id="arteSubtitulo" placeholder="Ex: Uma noite de adoração, Palavra e presença de Deus"></textarea>
+            </div>
+
+            <div class="designer-row">
+              <div class="field-group">
+                <label for="arteData">Data</label>
+                <input id="arteData" placeholder="Ex: Domingo, 19h" />
+              </div>
+              <div class="field-group">
+                <label for="arteHorario">Horário</label>
+                <input id="arteHorario" placeholder="Ex: 19h" />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="arteLocal">Local</label>
+              <input id="arteLocal" value="Igreja ADB Sampaio" />
+            </div>
+
+            <div class="designer-row">
+              <div class="field-group">
+                <label for="arteTipo">Tipo</label>
+                <select id="arteTipo">
+                  <option>Culto</option>
+                  <option>Conferência</option>
+                  <option>Santa Ceia</option>
+                  <option>Campanha</option>
+                  <option>Juventude</option>
+                  <option>Encontro de Mulheres</option>
+                  <option>Encontro de Homens</option>
+                  <option>Evento Especial</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="arteFormato">Formato</label>
+                <select id="arteFormato">
+                  <option value="3:4">Instagram 3:4</option>
+                  <option value="4:5">Feed 4:5</option>
+                  <option value="9:16">Story 9:16</option>
+                  <option value="1:1">Quadrado 1:1</option>
+                  <option value="16:9">Tela 16:9</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="arteObservacoes">Observações criativas</label>
+              <textarea id="arteObservacoes" placeholder="Ex: destaque a foto do preletor, use a logo da igreja, deixe espaço livre para o texto na parte superior"></textarea>
+            </div>
+
+            <div class="upload-block">
+              <h4>Imagens de apoio</h4>
+              <p class="upload-help">Envie fotos do preletor, logo da igreja, imagens de referência ou outros elementos visuais que devam ser considerados na criação do banner.</p>
+
+              <label class="upload-drop" for="arteImagens">
+                <input id="arteImagens" type="file" accept="image/*" multiple onchange="handleDesignerImages(event)" hidden>
+                <strong>Adicionar imagens</strong>
+                <span>Toque para selecionar uma ou várias imagens do celular ou computador.</span>
+              </label>
+
+              <div class="upload-actions">
+                <button type="button" class="btn secondary" onclick="document.getElementById('arteImagens').click()">Selecionar imagens</button>
+                <button type="button" class="btn secondary" onclick="clearDesignerImages()">Limpar imagens</button>
+              </div>
+
+              <div class="upload-list" id="uploadList">
+                <div class="upload-empty">Nenhuma imagem adicionada ainda. Quando você enviar imagens, elas aparecerão aqui com opção de definir o papel de cada uma.</div>
+              </div>
+            </div>
+
+            <div class="designer-note">Dica: você pode enviar a foto do preletor, a logo da igreja e uma imagem de referência visual. O prompt será montado incluindo essas referências para a criação da arte.</div>
+
+            <div class="designer-controls">
+              <button type="button" class="btn" onclick="gerarArteADB()">Gerar arte</button>
+              <button type="button" class="btn secondary" onclick="montarPromptNaTela()">Montar prompt</button>
+              <button type="button" class="btn secondary" onclick="copiarPromptADB()">Copiar prompt</button>
+            </div>
+          </div>
+
+          <p class="designer-status" id="statusArte">A aba já está dentro do app. Agora ela aceita imagens de apoio e está preparada para gerar artes quando a API estiver publicada.</p>
+        </div>
+
+        <div class="designer-card">
+          <h3>Prévia / Prompt</h3>
+          <div class="preview-box" id="previewBox">
+            <div class="preview-empty">
+              <strong>ADB Mídia-Designer</strong>
+              <span>Preencha os dados, envie imagens de apoio e toque em “Montar prompt” ou “Gerar arte”.</span>
+            </div>
+          </div>
+          <textarea class="prompt-box" id="promptArte" placeholder="O prompt da arte aparecerá aqui..."></textarea>
+        </div>
+      </div>
+    </div>
+  </section>
+
 
   <script>
     const mainMenu = document.getElementById('mainMenu');
@@ -957,8 +1506,332 @@
       setTimeout(function () { loadingLayer.classList.remove('is-visible'); }, 350);
     });
 
+
+    const designerPage = document.getElementById('designerPage');
+    const statusArte = document.getElementById('statusArte');
+    const promptArte = document.getElementById('promptArte');
+    const previewBox = document.getElementById('previewBox');
+
+    // Quando você tiver um backend/API publicado, coloque o link aqui.
+    // Exemplo: const API_ADB_MIDIA_DESIGNER = 'https://seu-servidor.com/api/gerar-arte-evento';
+    const API_ADB_MIDIA_DESIGNER = '/api/gerar-arte';
+
+    function openDesigner() {
+      designerPage.classList.add('is-open');
+      designerPage.setAttribute('aria-hidden', 'false');
+      mainMenu.style.display = 'none';
+      document.body.style.overflow = 'hidden';
+      renderDesignerImages();
+      setTimeout(function () { document.getElementById('arteTitulo').focus(); }, 250);
+    }
+
+    function closeDesigner() {
+      designerPage.classList.remove('is-open');
+      designerPage.setAttribute('aria-hidden', 'true');
+      mainMenu.style.display = '';
+      document.body.style.overflow = '';
+      window.scrollTo(0, 0);
+    }
+
+    const designerImages = [];
+    let designerImageCounter = 0;
+
+    function valorCampo(id) {
+      const el = document.getElementById(id);
+      return el ? String(el.value || '').trim() : '';
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes) return 'Tamanho não informado';
+      const units = ['B', 'KB', 'MB', 'GB'];
+      let size = bytes;
+      let unitIndex = 0;
+      while (size >= 1024 && unitIndex < units.length - 1) {
+        size /= 1024;
+        unitIndex += 1;
+      }
+      return (size < 10 && unitIndex > 0 ? size.toFixed(1) : Math.round(size)) + ' ' + units[unitIndex];
+    }
+
+    function defaultRoleByName(name) {
+      const n = String(name || '').toLowerCase();
+      if (n.includes('logo')) return 'Logo da Igreja';
+      if (n.includes('preletor') || n.includes('pregador') || n.includes('pastor')) return 'Foto do Preletor';
+      return 'Imagem de Referência';
+    }
+
+    function renderDesignerImages() {
+      const uploadList = document.getElementById('uploadList');
+      if (!uploadList) return;
+
+      if (!designerImages.length) {
+        uploadList.innerHTML = '<div class="upload-empty">Nenhuma imagem adicionada ainda. Quando você enviar imagens, elas aparecerão aqui com opção de definir o papel de cada uma.</div>';
+        return;
+      }
+
+      uploadList.innerHTML = designerImages.map(function (img, index) {
+        return '<div class="upload-item">'
+          + '<div class="upload-thumb"><img src="' + img.dataUrl + '" alt="' + escapeHtml(img.name) + '"></div>'
+          + '<div class="upload-meta">'
+          +   '<div class="upload-name"><strong title="' + escapeHtml(img.name) + '">' + escapeHtml(img.name) + '</strong><span class="upload-chip">Imagem ' + (index + 1) + '</span></div>'
+          +   '<div class="upload-sub">' + escapeHtml(formatBytes(img.size)) + ' • selecione como essa imagem deve ser usada na arte.</div>'
+          +   '<select onchange="changeDesignerImageRole(' + img.id + ', this.value)">'
+          +     '<option value="Foto do Preletor"' + (img.role === 'Foto do Preletor' ? ' selected' : '') + '>Foto do Preletor</option>'
+          +     '<option value="Logo da Igreja"' + (img.role === 'Logo da Igreja' ? ' selected' : '') + '>Logo da Igreja</option>'
+          +     '<option value="Imagem de Referência"' + (img.role === 'Imagem de Referência' ? ' selected' : '') + '>Imagem de Referência</option>'
+          +     '<option value="Fundo / Elemento Extra"' + (img.role === 'Fundo / Elemento Extra' ? ' selected' : '') + '>Fundo / Elemento Extra</option>'
+          +   '</select>'
+          +   '<div class="upload-actions"><button type="button" class="btn secondary" onclick="removeDesignerImage(' + img.id + ')">Remover</button></div>'
+          + '</div>'
+          + '</div>';
+      }).join('');
+    }
+
+    function resizeImageFile(file, maxSize, quality) {
+      maxSize = maxSize || 1800;
+      quality = quality || 0.88;
+      return new Promise(function (resolve, reject) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          const img = new Image();
+          img.onload = function () {
+            let width = img.width;
+            let height = img.height;
+            const ratio = Math.min(1, maxSize / Math.max(width, height));
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const mimeType = file.type && file.type.includes('png') ? 'image/png' : 'image/jpeg';
+            const dataUrl = canvas.toDataURL(mimeType, mimeType === 'image/jpeg' ? quality : undefined);
+            resolve({ dataUrl: dataUrl, mimeType: mimeType });
+          };
+          img.onerror = reject;
+          img.src = event.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleDesignerImages(event) {
+      const files = Array.from((event && event.target && event.target.files) || []);
+      if (!files.length) return;
+
+      statusArte.textContent = 'Preparando imagens para o Designer...';
+
+      for (const file of files) {
+        if (!file.type || !file.type.startsWith('image/')) continue;
+
+        try {
+          const resized = await resizeImageFile(file, 1800, 0.88);
+          designerImages.push({
+            id: ++designerImageCounter,
+            name: file.name,
+            size: file.size,
+            mimeType: resized.mimeType || file.type || 'image/jpeg',
+            role: defaultRoleByName(file.name),
+            dataUrl: resized.dataUrl
+          });
+          renderDesignerImages();
+        } catch (error) {
+          statusArte.textContent = 'Não foi possível carregar uma das imagens: ' + file.name;
+        }
+      }
+
+      statusArte.textContent = designerImages.length + ' imagem(ns) de apoio pronta(s) para usar no Designer.';
+      event.target.value = '';
+    }
+
+    function changeDesignerImageRole(id, role) {
+      const item = designerImages.find(function (img) { return img.id === id; });
+      if (!item) return;
+      item.role = role;
+      statusArte.textContent = 'Função da imagem atualizada: ' + role + '.';
+    }
+
+    function removeDesignerImage(id) {
+      const index = designerImages.findIndex(function (img) { return img.id === id; });
+      if (index === -1) return;
+      designerImages.splice(index, 1);
+      renderDesignerImages();
+      statusArte.textContent = designerImages.length ? 'Imagem removida. Restam ' + designerImages.length + ' imagem(ns) de apoio.' : 'Todas as imagens de apoio foram removidas.';
+    }
+
+    function clearDesignerImages() {
+      designerImages.splice(0, designerImages.length);
+      renderDesignerImages();
+      statusArte.textContent = 'Imagens de apoio limpas.';
+    }
+
+    function montarResumoImagensPrompt() {
+      if (!designerImages.length) {
+        return 'Imagens de apoio: nenhuma imagem enviada.';
+      }
+
+      const linhas = designerImages.map(function (img, index) {
+        return '- Imagem ' + (index + 1) + ': ' + img.role + ' (' + img.name + '). Use esta imagem como referência visual relevante para a composição.';
+      });
+
+      return 'Imagens de apoio enviadas pelo usuário:
+' + linhas.join('
+');
+    }
+
+    function renderPromptPreview() {
+      if (!designerImages.length) {
+        previewBox.innerHTML = '<div class="preview-empty"><strong>ADB Mídia-Designer</strong><span>Preencha os dados, envie imagens de apoio e toque em “Montar prompt” ou “Gerar arte”.</span></div>';
+        return;
+      }
+
+      const thumbs = designerImages.slice(0, 4).map(function (img) {
+        return '<div class="upload-thumb" style="width:100%;height:160px;"><img src="' + img.dataUrl + '" alt="' + escapeHtml(img.name) + '"></div>';
+      }).join('');
+
+      previewBox.innerHTML = '<div style="width:100%;display:grid;gap:14px;">'
+        + '<div class="preview-empty"><strong>' + designerImages.length + ' imagem(ns) adicionada(s)</strong><span>Essas referências serão usadas junto com o prompt na criação da arte.</span></div>'
+        + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;">' + thumbs + '</div>'
+        + '</div>';
+    }
+
+    function montarPromptADB() {
+      const titulo = valorCampo('arteTitulo') || 'Evento da Igreja ADB Sampaio';
+      const subtitulo = valorCampo('arteSubtitulo');
+      const data = valorCampo('arteData');
+      const horario = valorCampo('arteHorario');
+      const local = valorCampo('arteLocal') || 'Igreja ADB Sampaio';
+      const tipo = valorCampo('arteTipo') || 'Culto';
+      const formato = valorCampo('arteFormato') || '3:4';
+      const observacoes = valorCampo('arteObservacoes');
+      const resumoImagens = montarResumoImagensPrompt();
+
+      return `Crie uma arte para evento da Igreja ADB Sampaio.
+
+Projeto: ADB Mídia-Designer
+Tipo de evento: ${tipo}
+Título principal: ${titulo}
+Subtítulo/frase: ${subtitulo || 'Sem subtítulo definido'}
+Data: ${data || 'Data a definir'}
+Horário: ${horario || 'Horário a definir'}
+Local: ${local}
+Formato: ${formato}
+Observações criativas: ${observacoes || 'Nenhuma observação extra informada'}
+
+Estilo visual obrigatório:
+- moderno, premium, editorial, worship e cinematográfico;
+- identidade de igreja cristã contemporânea;
+- cores principais: preto, off-white e marrom;
+- detalhes discretos em dourado queimado, bege, areia ou âmbar;
+- iluminação quente, atmosfera espiritual, profundidade e contraste elegante;
+- composição limpa, forte e acolhedora;
+- estética de culto, presença de Deus, comunhão e excelência;
+- visual próprio para Instagram da ADB Sampaio;
+- manter espaço de respiro para textos;
+- não usar emojis;
+- não usar estética infantil, cartoon, cyberpunk ou neon exagerado;
+- não distorcer logotipos;
+- não inventar informações além das fornecidas.
+
+Direção criativa:
+Crie uma base visual impactante e profissional para divulgação de evento da igreja. A imagem deve parecer premium, espiritual e institucional, com foco em adoração, presença de Deus e excelência visual. Priorize uma composição que permita aplicar título, data e horário com clareza.
+
+${resumoImagens}
+
+Se houver foto do preletor enviada, preserve a identidade visual da pessoa e use a imagem como elemento principal quando isso fizer sentido. Se houver logo da igreja enviada, utilize-a como referência oficial. Se houver imagens de referência, absorva estilo, clima e composição sem copiar de forma literal.`;
+    }
+
+    function montarPromptNaTela() {
+      const prompt = montarPromptADB();
+      promptArte.value = prompt;
+      renderPromptPreview();
+      statusArte.textContent = designerImages.length
+        ? 'Prompt montado com ' + designerImages.length + ' imagem(ns) de apoio no estilo do projeto ADB Mídia-Designer.'
+        : 'Prompt montado com o estilo do projeto ADB Mídia-Designer.';
+      return prompt;
+    }
+
+    async function copiarPromptADB() {
+      const prompt = montarPromptNaTela();
+      try {
+        await navigator.clipboard.writeText(prompt);
+        statusArte.textContent = 'Prompt copiado.';
+      } catch (error) {
+        promptArte.select();
+        statusArte.textContent = 'Prompt pronto. Selecione e copie manualmente.';
+      }
+    }
+
+    async function gerarArteADB() {
+      const prompt = montarPromptNaTela();
+
+      if (!API_ADB_MIDIA_DESIGNER) {
+        statusArte.textContent = 'A aba está pronta dentro do app. Para gerar imagem real, falta apenas configurar o link da API em API_ADB_MIDIA_DESIGNER. O upload de imagens já está preparado.';
+        renderPromptPreview();
+        return;
+      }
+
+      statusArte.textContent = 'Gerando arte...';
+      previewBox.innerHTML = '<div class="preview-empty"><strong>Gerando arte</strong><span>Aguarde alguns instantes...</span></div>';
+
+      const dados = {
+        titulo: valorCampo('arteTitulo') || 'Evento da Igreja ADB Sampaio',
+        subtitulo: valorCampo('arteSubtitulo'),
+        data: valorCampo('arteData'),
+        horario: valorCampo('arteHorario'),
+        local: valorCampo('arteLocal') || 'Igreja ADB Sampaio',
+        tipo_evento: valorCampo('arteTipo') || 'Culto',
+        formato: valorCampo('arteFormato') || '3:4',
+        observacoes: valorCampo('arteObservacoes'),
+        prompt: prompt,
+        reference_images: designerImages.map(function (img) {
+          return {
+            name: img.name,
+            role: img.role,
+            mime_type: img.mimeType,
+            data_base64: String(img.dataUrl).split(',')[1] || ''
+          };
+        })
+      };
+
+      try {
+        const resposta = await fetch(API_ADB_MIDIA_DESIGNER, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dados)
+        });
+
+        const resultado = await resposta.json();
+        if (!resposta.ok) throw new Error(resultado.detail || 'Erro ao gerar arte.');
+
+        const imageBase64 = resultado.image_base64 || resultado.image || '';
+        const mimeType = resultado.mime_type || 'image/png';
+        const imageUrl = imageBase64.startsWith('data:') ? imageBase64 : ('data:' + mimeType + ';base64,' + imageBase64);
+
+        previewBox.innerHTML = '<div style="width:100%;display:grid;gap:14px;"><img src="' + imageUrl + '" alt="Arte gerada pelo ADB Mídia-Designer"><a class="btn" href="' + imageUrl + '" download="arte-adb-midia-designer.png" style="justify-content:center;text-decoration:none;">Baixar Arte</a></div>';
+        statusArte.textContent = 'Arte gerada com sucesso dentro do app. Você pode baixar ou gerar outra variação.';
+      } catch (error) {
+        renderPromptPreview();
+        statusArte.textContent = 'Erro: ' + error.message;
+      }
+    }
+
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Escape' && browserPage.classList.contains('is-open')) closeBrowser();
+      if (event.key === 'Escape' && designerPage.classList.contains('is-open')) closeDesigner();
     });
   </script>
 
