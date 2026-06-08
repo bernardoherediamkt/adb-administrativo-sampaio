@@ -1,9 +1,12 @@
 {
-  "name": "adb-administrativo-midia-designer",
+  "name": "adb-administrativo-sampaio",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vercel dev"
+    "build": "node scripts/build-static.mjs"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
