@@ -1,0 +1,39 @@
+ADB Administrativo + ADB Mídia-Designer
+
+Este pacote mantém o mesmo app ADB Administrativo e adiciona, dentro da aba Artes de Eventos, o ADB Mídia-Designer com upload de imagens de apoio.
+
+O que foi adicionado:
+- Campo para enviar uma ou várias imagens.
+- Prévia das imagens dentro do Designer.
+- Seleção da função de cada imagem: Foto do Preletor, Logo da Igreja, Imagem de Referência ou Fundo/Elemento Extra.
+- Prompt automático no estilo ADB Sampaio.
+- Botão Gerar Arte conectado a /api/gerar-arte.
+- Backend seguro em api/gerar-arte.js para chamar a API do Gemini sem expor sua chave no HTML.
+
+IMPORTANTE SOBRE A CHAVE API
+Não coloque a chave dentro do index.html e não suba sua chave no GitHub.
+Configure a chave como variável de ambiente no servidor/Vercel:
+GEMINI_API_KEY=sua_chave
+
+Como publicar funcionando com API no Vercel:
+1. Suba todos os arquivos deste pacote para o seu repositório no GitHub.
+2. Entre em https://vercel.com e importe esse repositório.
+3. Em Project Settings > Environment Variables, adicione:
+   GEMINI_API_KEY = sua chave do Google AI Studio
+   GEMINI_IMAGE_MODEL = gemini-3.1-flash-image
+   GEMINI_API_VERSION = v1
+4. Clique em Deploy.
+5. Abra o link HTTPS da Vercel no Safari do iPhone.
+6. Toque em Compartilhar > Adicionar à Tela de Início.
+
+Se usar GitHub Pages:
+- O app visual abre normalmente.
+- A parte de gerar imagem real não roda, porque GitHub Pages não executa backend/API.
+- Para gerar imagem dentro do app, use Vercel, Render, Railway ou outro servidor que rode a pasta api/.
+
+Arquivos principais:
+- index.html: app completo.
+- api/gerar-arte.js: endpoint seguro de geração de imagem.
+- manifest.webmanifest: instalação no iPhone.
+- service-worker.js: suporte PWA/cache.
+- icons/: ícones do app.
