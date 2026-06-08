@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
   <meta name="theme-color" content="#24211d" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -509,11 +509,12 @@
       overflow: auto;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
+      touch-action: pan-x pan-y pinch-zoom;
     }
 
     .browser-page.sheet-fit .browser-frame {
       transform-origin: top left;
-      transition: transform .16s ease, width .16s ease, height .16s ease;
+      transition: transform .08s ease, width .08s ease, height .08s ease;
     }
 
     .sheet-tools {
@@ -528,7 +529,7 @@
       -webkit-overflow-scrolling: touch;
     }
 
-    .browser-page.sheet-fit .sheet-tools { display: flex; }
+    .browser-page.sheet-fit .sheet-tools { display: none; }
 
     .sheet-pill {
       flex: 0 0 auto;
@@ -799,13 +800,6 @@
         <button type="button" class="mini-btn" onclick="reloadBrowser()">Recarregar</button>
       </div>
     </div>
-    <div class="sheet-tools" id="sheetTools" aria-label="Ajuste de visualização da planilha">
-      <button type="button" class="sheet-pill" onclick="zoomSheet(-0.08)">−</button>
-      <button type="button" class="sheet-pill is-active" id="fitSheetBtn" onclick="fitSheetToScreen()">Ajustar à tela</button>
-      <button type="button" class="sheet-pill" onclick="zoomSheet(0.08)">+</button>
-      <button type="button" class="sheet-pill" onclick="setSheetZoom(1)">100%</button>
-      <span class="sheet-hint">Modo planilha: visualize mais colunas na tela do celular.</span>
-    </div>
     <div class="browser-shell" id="browserShell">
       <iframe class="browser-frame" id="browserFrame" title="Navegador interno ADB" allow="fullscreen; clipboard-read; clipboard-write"></iframe>
       <div class="loading" id="loadingLayer">Carregando dentro do app...</div>
@@ -820,10 +814,12 @@
     const browserTitle = document.getElementById('browserTitle');
     const browserSubtitle = document.getElementById('browserSubtitle');
     const loadingLayer = document.getElementById('loadingLayer');
-    const fitSheetBtn = document.getElementById('fitSheetBtn');
     let currentUrl = '';
     let currentIsSheet = false;
     let currentSheetScale = 1;
+    let pinchStartDistance = 0;
+    let pinchStartScale = 1;
+    let gestureStartScale = 1;
 
     function isSpreadsheetUrl(url) {
       return /docs\.google\.com\/spreadsheets\//i.test(url || '');
@@ -851,28 +847,37 @@
 
     function applySheetZoom(scale) {
       if (!currentIsSheet) return;
-      const safeScale = Math.max(0.52, Math.min(1.15, Number(scale) || 1));
+      const safeScale = Math.max(0.45, Math.min(2.8, Number(scale) || 1));
       currentSheetScale = safeScale;
       browserFrame.style.transform = 'scale(' + safeScale + ')';
       browserFrame.style.transformOrigin = '0 0';
       browserFrame.style.width = (100 / safeScale) + '%';
       browserFrame.style.height = (100 / safeScale) + '%';
-      if (fitSheetBtn) {
-        fitSheetBtn.classList.toggle('is-active', Math.abs(safeScale - getFitScale()) < 0.02);
-      }
     }
 
-    function fitSheetToScreen() {
-      applySheetZoom(getFitScale());
-      if (browserShell) browserShell.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    function getTouchDistance(touches) {
+      if (!touches || touches.length < 2) return 0;
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
     }
 
-    function setSheetZoom(scale) {
-      applySheetZoom(scale);
+    function startPinch(event) {
+      if (!currentIsSheet || !event.touches || event.touches.length !== 2) return;
+      pinchStartDistance = getTouchDistance(event.touches);
+      pinchStartScale = currentSheetScale || getFitScale();
     }
 
-    function zoomSheet(delta) {
-      applySheetZoom(currentSheetScale + delta);
+    function movePinch(event) {
+      if (!currentIsSheet || !event.touches || event.touches.length !== 2 || !pinchStartDistance) return;
+      event.preventDefault();
+      const distance = getTouchDistance(event.touches);
+      applySheetZoom(pinchStartScale * (distance / pinchStartDistance));
+    }
+
+    function endPinch() {
+      pinchStartDistance = 0;
+      pinchStartScale = currentSheetScale;
     }
 
     function resetBrowserZoom() {
@@ -886,7 +891,7 @@
       currentIsSheet = isSpreadsheetUrl(url);
       currentUrl = prepareGoogleSheetUrl(url);
       browserTitle.textContent = title || 'ADB Administrativo';
-      browserSubtitle.textContent = currentIsSheet ? 'Planilha ajustada para a tela' : (subtitle || 'Abrindo dentro do app');
+      browserSubtitle.textContent = currentIsSheet ? 'Use a pinça para aproximar ou afastar' : (subtitle || 'Abrindo dentro do app');
       loadingLayer.classList.add('is-visible');
       browserPage.classList.add('is-open');
       browserPage.classList.toggle('sheet-fit', currentIsSheet);
@@ -923,8 +928,30 @@
     }
 
     window.addEventListener('resize', function () {
-      if (currentIsSheet && fitSheetBtn && fitSheetBtn.classList.contains('is-active')) fitSheetToScreen();
+      if (currentIsSheet) applySheetZoom(getFitScale());
     });
+
+
+    browserShell.addEventListener('touchstart', startPinch, { passive: true });
+    browserShell.addEventListener('touchmove', movePinch, { passive: false });
+    browserShell.addEventListener('touchend', endPinch, { passive: true });
+    browserShell.addEventListener('touchcancel', endPinch, { passive: true });
+
+    document.addEventListener('gesturestart', function (event) {
+      if (!currentIsSheet) return;
+      event.preventDefault();
+      gestureStartScale = currentSheetScale || getFitScale();
+    }, { passive: false });
+
+    document.addEventListener('gesturechange', function (event) {
+      if (!currentIsSheet) return;
+      event.preventDefault();
+      applySheetZoom(gestureStartScale * event.scale);
+    }, { passive: false });
+
+    document.addEventListener('gestureend', function () {
+      gestureStartScale = currentSheetScale;
+    }, { passive: true });
 
     browserFrame.addEventListener('load', function () {
       setTimeout(function () { loadingLayer.classList.remove('is-visible'); }, 350);

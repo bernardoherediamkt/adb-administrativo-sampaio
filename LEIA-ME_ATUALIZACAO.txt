@@ -1,15 +1,3 @@
-ADB Administrativo - Atualização Planilhas Responsivas
-
-Alterações:
-- Todas as URLs do Google Sheets agora abrem em modo de ajuste dentro do navegador interno do app.
-- Adicionado controle de visualização para planilhas: Ajustar à tela, zoom -/+, e 100%.
-- Mantido o layout visual principal do app.
-
-Como atualizar no GitHub:
-1. Envie todos os arquivos desta pasta para o mesmo repositório.
-2. Confirme a substituição dos arquivos antigos.
-3. Clique em Commit changes.
-4. Aguarde alguns minutos e reabra o app no iPhone.
-
-Observação:
-O ajuste é aplicado ao iframe inteiro da planilha para permitir visualizar mais colunas no celular.
+Atualização: planilhas com zoom por gesto de pinça no iPhone, sem botões de zoom.
+Suba index.html, manifest.webmanifest, service-worker.js e a pasta icons no GitHub e clique em Commit changes.
+Se o app instalado não atualizar imediatamente, remova da tela inicial e adicione novamente pelo Safari.

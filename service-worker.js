@@ -1,4 +1,4 @@
-const CACHE_NAME = 'adb-administrativo-v4-planilhas-responsivas';
+const CACHE_NAME = 'adb-administrativo-v5-pinch-planilhas';
 const ASSETS = [
   './',
   './index.html',
