@@ -1687,9 +1687,7 @@
         return '- Imagem ' + (index + 1) + ': ' + img.role + ' (' + img.name + '). Use esta imagem como referência visual relevante para a composição.';
       });
 
-      return 'Imagens de apoio enviadas pelo usuário:
-' + linhas.join('
-');
+      return 'Imagens de apoio enviadas pelo usuário:\n' + linhas.join('\n');
     }
 
     function renderPromptPreview() {
