@@ -11,21 +11,21 @@ const DEFAULT_FOLDER_IDS = [
 
 const KNOWN_SHEETS = [
   { name: 'Planilha de Membros', id: '1vX_lHJgylBPWtlGBJmVqABvPHuogv8EQYYIh1-zhj2Q', area: 'Secretaria', type: 'members' },
-  { name: 'Janeiro 2026', id: '13jof3g97AsQz26SRHmo53pOxidhZgXWSkWRqd3SFeBo', area: 'Controle Financeiro 2026', type: 'finance', month: 1 },
-  { name: 'Fevereiro 2026', id: '1sf_jfJ-PKsTN62WUwzAzpruwdaYVRFIeLeKV9h9Psqs', area: 'Controle Financeiro 2026', type: 'finance', month: 2 },
-  { name: 'Março 2026', id: '11irZSKrZQaIiNT78fLTAbp_WLrCCcOlKeUlcZVce7Hs', area: 'Controle Financeiro 2026', type: 'finance', month: 3 },
-  { name: 'Abril 2026', id: '1yHpksSYdCaXACUE16sb8gu2B1HZHySe1QqO0EJ1lnDc', area: 'Controle Financeiro 2026', type: 'finance', month: 4 },
-  { name: 'Maio 2026', id: '1wzhKhfRPRUa1ltTu3TTBliLm5c5611-qWniwrVxUfhk', area: 'Controle Financeiro 2026', type: 'finance', month: 5 },
-  { name: 'Junho 2026', id: '1jCBvXixmjT1fhdjYkQSNj806bwUcsfh6bo_mhLLFwEU', area: 'Controle Financeiro 2026', type: 'finance', month: 6 }
+  { name: 'Janeiro 2026', id: '13jof3g97AsQz26SRHmo53pOxidhZgXWSkWRqd3SFeBo', area: 'Controle Financeiro 2026', type: 'finance', month: 1, year: 2026 },
+  { name: 'Fevereiro 2026', id: '1sf_jfJ-PKsTN62WUwzAzpruwdaYVRFIeLeKV9h9Psqs', area: 'Controle Financeiro 2026', type: 'finance', month: 2, year: 2026 },
+  { name: 'Março 2026', id: '11irZSKrZQaIiNT78fLTAbp_WLrCCcOlKeUlcZVce7Hs', area: 'Controle Financeiro 2026', type: 'finance', month: 3, year: 2026 },
+  { name: 'Abril 2026', id: '1yHpksSYdCaXACUE16sb8gu2B1HZHySe1QqO0EJ1lnDc', area: 'Controle Financeiro 2026', type: 'finance', month: 4, year: 2026 },
+  { name: 'Maio 2026', id: '1wzhKhfRPRUa1ltTu3TTBliLm5c5611-qWniwrVxUfhk', area: 'Controle Financeiro 2026', type: 'finance', month: 5, year: 2026 },
+  { name: 'Junho 2026', id: '1jCBvXixmjT1fhdjYkQSNj806bwUcsfh6bo_mhLLFwEU', area: 'Controle Financeiro 2026', type: 'finance', month: 6, year: 2026 }
 ];
 
 const MONTHS = [
-  ['janeiro', 1], ['fevereiro', 2], ['marco', 3], ['abril', 4], ['maio', 5], ['junho', 6],
+  ['janeiro', 1], ['fevereiro', 2], ['marco', 3], ['março', 3], ['abril', 4], ['maio', 5], ['junho', 6],
   ['julho', 7], ['agosto', 8], ['setembro', 9], ['outubro', 10], ['novembro', 11], ['dezembro', 12]
 ];
 
 const STOPWORDS = new Set([
-  'quanto','gastei','gasto','gastos','despesa','despesas','saida','saidas','entrada','entradas','valor','valores','relatorio','relatório','esse','essa','este','esta','deste','desta','dessa','desse','ano','mes','mês','semestre','primeiro','segundo','todos','todas','listar','liste','encontrou','encontrados','total','recalcule','calcule','com','para','pela','pelo','das','dos','que','foi','foram','minha','meu','meus','minhas','quero','saber','2026','igreja','adb','sampaio'
+  'quanto','gastei','gasto','gastos','despesa','despesas','saida','saidas','entrada','entradas','valor','valores','relatorio','relatório','esse','essa','este','esta','deste','desta','dessa','desse','ano','mes','mês','semestre','primeiro','segundo','todos','todas','listar','liste','encontrou','encontrados','total','recalcule','calcule','com','para','pela','pelo','das','dos','que','foi','foram','minha','meu','meus','minhas','quero','saber','igreja','adb','sampaio','voce','você','pode','preciso','ultimos','últimos','mais','recentes'
 ]);
 
 function envList(name) {
@@ -119,14 +119,57 @@ async function listRecentFiles({ token, folderIds, pageSize = 50 }) {
   return googleFetch(`https://www.googleapis.com/drive/v3/files?${params}`, token);
 }
 
+async function listAllAccessibleSpreadsheets({ token, pageSize = 120 }) {
+  const q = "trashed = false and mimeType = 'application/vnd.google-apps.spreadsheet'";
+  const params = new URLSearchParams({
+    q,
+    pageSize: String(Number(process.env.ADAM_DISCOVER_SHEETS_LIMIT || pageSize)),
+    orderBy: 'modifiedTime desc',
+    fields: 'files(id,name,mimeType,createdTime,modifiedTime,webViewLink,parents)'
+  });
+  const data = await googleFetch(`https://www.googleapis.com/drive/v3/files?${params}`, token);
+  return data.files || [];
+}
+
+function inferSheetMeta(file) {
+  const text = normalizeText(file.name);
+  const monthMatch = MONTHS.find(([name]) => text.includes(normalizeText(name)));
+  const yearMatch = text.match(/20\d{2}/);
+  const type = /(membro|cadastro|visitante|secretaria)/.test(text)
+    ? 'members'
+    : /(financeir|dizimo|dizimos|oferta|entrada|saida|caixa|controle|janeiro|fevereiro|marco|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)/.test(text)
+      ? 'finance'
+      : 'discovered';
+  return {
+    name: file.name,
+    id: file.id,
+    area: 'Planilhas descobertas no Drive',
+    type,
+    month: monthMatch ? monthMatch[1] : null,
+    year: yearMatch ? Number(yearMatch[0]) : null,
+    modifiedTime: file.modifiedTime,
+    discovered: true
+  };
+}
+
+function mergeSheets(known, discovered) {
+  const byId = new Map();
+  for (const sheet of [...known, ...discovered]) {
+    const existing = byId.get(sheet.id);
+    if (!existing) byId.set(sheet.id, sheet);
+    else byId.set(sheet.id, { ...existing, ...sheet, type: existing.type !== 'discovered' ? existing.type : sheet.type });
+  }
+  return Array.from(byId.values());
+}
+
 function inferFinanceQuestion(query) {
   const q = normalizeText(query);
-  return /(financeir|entrada|saida|dizimo|oferta|saldo|movimento|receita|despesa|gasto|relatorio|cantina|insumo|country|pink|zion|evento|touro|mecanico|diesel|bebida|salgado|pastel|limpeza|kids|descartav|janeiro|fevereiro|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|semestre|2026)/.test(q);
+  return /(financeir|entrada|saida|dizimo|dizimos|oferta|saldo|movimento|receita|despesa|gasto|relatorio|cantina|insumo|country|pink|zion|evento|touro|mecanico|diesel|bebida|salgado|pastel|limpeza|kids|descartav|janeiro|fevereiro|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|trimestre|semestre|faturamento|comparar|comparativo|2025|2026|ano passado)/.test(q);
 }
 
 function inferMembersQuestion(query) {
   const q = normalizeText(query);
-  return /(membro|cadastro|visitante|secretaria|telefone|endereco|anivers|discipulado)/.test(q);
+  return /(membro|membros|cadastro|cadastraram|cadastrado|visitante|secretaria|telefone|endereco|anivers|discipulado)/.test(q);
 }
 
 function inferSpreadsheetQuestion(query) {
@@ -134,12 +177,27 @@ function inferSpreadsheetQuestion(query) {
   return inferFinanceQuestion(query) || inferMembersQuestion(query) || /(planilha|tabela|linha|coluna|sheet|sheets)/.test(q);
 }
 
+function requestedYears(query) {
+  const q = normalizeText(query);
+  const years = new Set();
+  for (const match of q.matchAll(/20\d{2}/g)) years.add(Number(match[0]));
+  if (/ano passado|ano anterior|passado/.test(q)) years.add(2025);
+  if (/esse ano|este ano|desse ano|deste ano|atual|2026/.test(q)) years.add(2026);
+  if (/comparar|comparativo/.test(q) && years.size === 1) {
+    const y = Array.from(years)[0];
+    years.add(y - 1);
+  }
+  return Array.from(years).sort();
+}
+
 function requestedMonths(query) {
   const q = normalizeText(query);
   const months = [];
-  for (const [name, number] of MONTHS) if (q.includes(name)) months.push(number);
+  for (const [name, number] of MONTHS) if (q.includes(normalizeText(name))) months.push(number);
+  if (/primeiro trimestre|1 trimestre|1o trimestre|1º trimestre/.test(q)) return [1, 2, 3];
+  if (/segundo trimestre|2 trimestre|2o trimestre|2º trimestre/.test(q)) return [4, 5, 6];
   if (/primeiro semestre|1 semestre|1o semestre|1º semestre|semestre/.test(q)) return [1, 2, 3, 4, 5, 6];
-  if (/ano|2026|este ano|esse ano|deste ano|desse ano/.test(q) && inferFinanceQuestion(query)) return [1, 2, 3, 4, 5, 6];
+  if (/ano|2026|2025|este ano|esse ano|deste ano|desse ano|ano passado/.test(q) && inferFinanceQuestion(query)) return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
   return months;
 }
 
@@ -175,20 +233,20 @@ function extractQueryTerms(query) {
     .filter((w) => w.length >= 4 && !STOPWORDS.has(w));
 
   const terms = Array.from(new Set(q));
-  // Termos administrativos úteis para ampliar busca sem obrigar soma automática.
   const normalized = normalizeText(query);
   if (normalized.includes('festa country')) terms.push('country');
   if (normalized.includes('pink')) terms.push('pink');
   if (normalized.includes('cantina')) terms.push('cantina', 'bebida', 'salgado', 'pastel');
   if (normalized.includes('insumo')) terms.push('limpeza', 'kids', 'biscoito', 'papelaria', 'descartavel', 'recepcao');
-  return Array.from(new Set(terms)).slice(0, 12);
+  if (normalized.includes('membro') || normalized.includes('cadastro')) terms.push('membro', 'cadastro', 'nome', 'data');
+  return Array.from(new Set(terms)).slice(0, 18);
 }
 
 async function readSheetDataViaSheetsApi({ token, spreadsheetId, finance = false, members = false }) {
   const tabs = await getSheetTabs({ token, spreadsheetId });
-  const maxSheets = finance ? 14 : 6;
-  const maxRows = finance ? Number(process.env.ADAM_SHEETS_MAX_ROWS || 1200) : (members ? 700 : 300);
-  const maxCols = finance ? Number(process.env.ADAM_SHEETS_MAX_COLS || 52) : (members ? 32 : 26);
+  const maxSheets = finance ? Number(process.env.ADAM_SHEETS_MAX_TABS_FINANCE || 16) : (members ? 12 : 8);
+  const maxRows = finance ? Number(process.env.ADAM_SHEETS_MAX_ROWS || 1600) : (members ? Number(process.env.ADAM_MEMBERS_MAX_ROWS || 2000) : 500);
+  const maxCols = finance ? Number(process.env.ADAM_SHEETS_MAX_COLS || 60) : (members ? 45 : 32);
 
   const selectedTabs = tabs.slice(0, maxSheets);
   const ranges = selectedTabs.map((tab) => {
@@ -199,7 +257,6 @@ async function readSheetDataViaSheetsApi({ token, spreadsheetId, finance = false
 
   if (!ranges.length) return [];
 
-  // Leitura oficial por Google Sheets API. Esta é a fonte principal para planilhas.
   const params = new URLSearchParams();
   for (const range of ranges) params.append('ranges', range);
   params.set('majorDimension', 'ROWS');
@@ -237,7 +294,7 @@ function rowsToText(rows, maxChars = 12000) {
   return lines.join('\n');
 }
 
-function relevantRowsToText(tabs, query, maxLines = 80, maxChars = 22000) {
+function relevantRowsToText(tabs, query, maxLines = 120, maxChars = 30000) {
   const terms = extractQueryTerms(query);
   if (!terms.length) return '';
 
@@ -247,7 +304,7 @@ function relevantRowsToText(tabs, query, maxLines = 80, maxChars = 22000) {
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i] || [];
       const rowText = normalizeText(row.join(' '));
-      if (terms.some((term) => rowText.includes(term))) {
+      if (terms.some((term) => rowText.includes(normalizeText(term)))) {
         matches.push(`Aba ${tab.tab} | ${rowToLine(i, row)}`);
         if (matches.length >= maxLines) break;
       }
@@ -272,26 +329,59 @@ async function exportGoogleDocText({ token, fileId, mimeType }) {
   return googleFetch(url, token);
 }
 
+function sheetSearchScore(sheet, query) {
+  const q = normalizeText(query);
+  const name = normalizeText(`${sheet.name} ${sheet.area || ''}`);
+  let score = 0;
+  for (const term of extractQueryTerms(query)) {
+    if (name.includes(normalizeText(term))) score += 8;
+  }
+  for (const y of requestedYears(query)) {
+    if (sheet.year === y || name.includes(String(y))) score += 10;
+  }
+  for (const m of requestedMonths(query)) {
+    if (sheet.month === m) score += 6;
+    const monthNames = MONTHS.filter(([, n]) => n === m).map(([mn]) => normalizeText(mn));
+    if (monthNames.some((mn) => name.includes(mn))) score += 4;
+  }
+  if (inferFinanceQuestion(query) && (sheet.type === 'finance' || /(financeir|controle|caixa|entrada|saida|dizimo|oferta)/.test(name))) score += 8;
+  if (inferMembersQuestion(query) && (sheet.type === 'members' || /(membro|cadastro|visitante|secretaria|form)/.test(name))) score += 12;
+  if (sheet.discovered) score += 1;
+  return score;
+}
+
 function selectSpreadsheets({ sheets, query }) {
   const finance = inferFinanceQuestion(query);
   const members = inferMembersQuestion(query);
   const months = requestedMonths(query);
+  const years = requestedYears(query);
 
-  let selected = sheets;
-
+  let selected = [];
   if (finance) {
-    selected = sheets.filter((s) => s.type === 'finance' || /financeiro|janeiro|fevereiro|março|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|2026/i.test(`${s.name} ${s.area}`));
-    // Se a pergunta citar mês específico, lê apenas esses meses. Se citar ano/semestre/evento sem mês, lê todos os meses conhecidos.
-    if (months.length) selected = selected.filter((s) => !s.month || months.includes(s.month));
+    selected = sheets
+      .map((s) => ({ ...s, score: sheetSearchScore(s, query) }))
+      .filter((s) => {
+        if (s.score >= 8) return true;
+        const name = normalizeText(`${s.name} ${s.area || ''}`);
+        if (months.length && months.some((m) => MONTHS.filter(([, n]) => n === m).some(([mn]) => name.includes(normalizeText(mn))))) return true;
+        if (years.length && years.some((y) => name.includes(String(y)))) return true;
+        return false;
+      })
+      .sort((a, b) => b.score - a.score || String(b.modifiedTime || '').localeCompare(String(a.modifiedTime || '')));
   } else if (members) {
-    selected = sheets.filter((s) => s.type === 'members' || /membros|secretaria/i.test(`${s.name} ${s.area}`));
+    selected = sheets
+      .map((s) => ({ ...s, score: sheetSearchScore(s, query) }))
+      .filter((s) => s.score >= 8 || /(membro|cadastro|visitante|secretaria|form)/.test(normalizeText(`${s.name} ${s.area || ''}`)))
+      .sort((a, b) => b.score - a.score || String(b.modifiedTime || '').localeCompare(String(a.modifiedTime || '')));
   } else if (inferSpreadsheetQuestion(query)) {
-    selected = sheets.slice(0, 6);
-  } else {
-    selected = [];
+    selected = sheets
+      .map((s) => ({ ...s, score: sheetSearchScore(s, query) }))
+      .filter((s) => s.score > 0)
+      .sort((a, b) => b.score - a.score || String(b.modifiedTime || '').localeCompare(String(a.modifiedTime || '')));
   }
 
-  return selected.slice(0, finance ? 12 : 5);
+  const limit = finance ? Number(process.env.ADAM_MAX_FINANCE_SHEETS || 24) : (members ? Number(process.env.ADAM_MAX_MEMBER_SHEETS || 10) : 8);
+  return selected.slice(0, limit);
 }
 
 async function buildSpreadsheetContext({ token, sheets, query }) {
@@ -300,21 +390,23 @@ async function buildSpreadsheetContext({ token, sheets, query }) {
   const selected = selectSpreadsheets({ sheets, query });
 
   if (!selected.length) {
-    return 'Nenhuma leitura de planilha foi necessária para esta pergunta.';
+    return 'Nenhuma leitura de planilha foi necessária ou nenhuma planilha compatível foi localizada na lista de arquivos acessíveis pela Service Account.';
   }
 
   const sections = [];
+  sections.push(`ÍNDICE DE PLANILHAS SELECIONADAS PARA ESTA PERGUNTA:\n${selected.map((s, i) => `${i + 1}. ${s.name} | ID: ${s.id} | tipo: ${s.type || 'não classificado'} | ano: ${s.year || 'não identificado'} | mês: ${s.month || 'não identificado'} | origem: ${s.discovered ? 'descoberta no Drive' : 'fixa no app'}`).join('\n')}`);
+
   for (const sheet of selected) {
     try {
       const tabs = await readSheetDataViaSheetsApi({ token, spreadsheetId: sheet.id, finance, members });
-      const relevant = finance ? relevantRowsToText(tabs, query) : '';
+      const relevant = relevantRowsToText(tabs, query, finance ? 140 : 120, finance ? 35000 : 30000);
       const tabsText = tabs
-        .map((tab) => `Aba: ${tab.tab}\nIntervalo lido pela Sheets API: ${tab.range || 'não informado'}\n${rowsToText(tab.rows, finance ? 18000 : 5000)}`)
+        .map((tab) => `Aba: ${tab.tab}\nIntervalo lido pela Sheets API: ${tab.range || 'não informado'}\n${rowsToText(tab.rows, finance ? 20000 : 16000)}`)
         .join('\n\n');
 
-      sections.push(`PLANILHA: ${sheet.name}\nÁrea: ${sheet.area}\nID: ${sheet.id}\nFONTE: Google Sheets API direta, não preview do Drive.\nORIENTAÇÃO: para valores financeiros, conferir linha, coluna, descrição e tipo de lançamento antes de afirmar ou somar.\n${relevant ? `\nLINHAS POTENCIALMENTE RELEVANTES ENCONTRADAS PELA BUSCA TEXTUAL:\n${relevant}\n` : ''}\nDADOS BRUTOS LIDOS DA PLANILHA:\n${tabsText}`);
+      sections.push(`PLANILHA: ${sheet.name}\nÁrea: ${sheet.area}\nID: ${sheet.id}\nFONTE: Google Sheets API direta.\nORIENTAÇÃO: conferir cabeçalhos, colunas, tipo de lançamento, descrição, data e valor antes de afirmar ou somar. Para membros, identificar a coluna de data de cadastro e ordenar do mais recente para o mais antigo.\n${relevant ? `\nLINHAS POTENCIALMENTE RELEVANTES ENCONTRADAS PELA BUSCA TEXTUAL:\n${relevant}\n` : ''}\nDADOS BRUTOS LIDOS DA PLANILHA:\n${tabsText}`);
     } catch (error) {
-      sections.push(`PLANILHA: ${sheet.name}\nÁrea: ${sheet.area}\nNão foi possível ler esta planilha pela Google Sheets API: ${error.message}`);
+      sections.push(`PLANILHA: ${sheet.name}\nÁrea: ${sheet.area}\nID: ${sheet.id}\nNão foi possível ler esta planilha pela Google Sheets API: ${error.message}`);
     }
   }
   return sections.join('\n\n---\n\n');
@@ -331,16 +423,21 @@ async function buildDriveContext(query) {
     area: 'Google Drive',
     type: 'extra'
   }));
-  const sheets = [...KNOWN_SHEETS, ...extraSheets];
+
+  const discoveredFiles = await listAllAccessibleSpreadsheets({ token }).catch((error) => {
+    console.warn('Não foi possível descobrir planilhas globais:', error.message);
+    return [];
+  });
+  const discoveredSheets = discoveredFiles.map(inferSheetMeta);
+  const sheets = mergeSheets([...KNOWN_SHEETS, ...extraSheets], discoveredSheets);
 
   const finance = inferFinanceQuestion(query);
   const spreadsheetQuestion = inferSpreadsheetQuestion(query);
 
   const spreadsheetContextPromise = buildSpreadsheetContext({ token, sheets, query }).catch((error) => `Não foi possível ler planilhas pela Google Sheets API: ${error.message}`);
 
-  // Para perguntas de planilha/financeiro, priorizamos Sheets API e reduzimos leitura de arquivos do Drive para evitar confusão.
   const matchingFilesPromise = spreadsheetQuestion
-    ? Promise.resolve({ files: [], note: 'Busca de arquivos do Drive reduzida para priorizar Google Sheets API.' })
+    ? Promise.resolve({ files: discoveredFiles.slice(0, 60), note: 'Planilhas descobertas globalmente pelo Drive API para seleção via Sheets API.' })
     : listFilesInFolders({ token, folderIds: effectiveFolderIds, query, pageSize: 35 }).catch((error) => ({ files: [], error: error.message }));
 
   const recentFilesPromise = spreadsheetQuestion
@@ -366,27 +463,31 @@ async function buildDriveContext(query) {
     }
   }
 
-  const fileList = files.map((file) => `- ${file.name} | tipo: ${file.mimeType} | modificado: ${file.modifiedTime}`).join('\n');
+  const fileList = files.map((file) => `- ${file.name} | ID: ${file.id} | tipo: ${file.mimeType} | modificado: ${file.modifiedTime}`).join('\n');
+  const allSheetsIndex = discoveredSheets.slice(0, 100).map((s) => `- ${s.name} | ID: ${s.id} | tipo inferido: ${s.type} | ano: ${s.year || 'não identificado'} | mês: ${s.month || 'não identificado'} | modificado: ${s.modifiedTime || ''}`).join('\n');
 
   const connected = true;
   const context = clip(`
 CONEXÃO GOOGLE: ativa via Service Account.
-Observação: o Adam só enxerga arquivos compartilhados com o e-mail da Service Account.
+Observação: a Service Account só enxerga arquivos compartilhados com ela, diretamente ou por pastas compartilhadas. O Adam agora faz descoberta global de planilhas visíveis para a Service Account, não apenas as planilhas fixas de 2026.
+
+ÍNDICE GLOBAL DE PLANILHAS VISÍVEIS PARA A SERVICE ACCOUNT:
+${allSheetsIndex || 'Nenhuma planilha descoberta globalmente. Verifique se as planilhas foram compartilhadas com a Service Account.'}
 
 MODO DE LEITURA DE PLANILHAS:
-Google Sheets API direta está habilitada como fonte principal para todas as leituras de planilha. Para assuntos financeiros, os valores abaixo vêm de células reais retornadas pela Sheets API, com linha, coluna e aba quando disponíveis.
+Google Sheets API direta é a fonte principal. Para assuntos financeiros e de membros, a seleção agora combina planilhas fixas + planilhas descobertas no Drive por nome, ano, mês e termos da pergunta.
 
 DADOS DE PLANILHAS LIDOS DIRETAMENTE PELA GOOGLE SHEETS API:
 ${spreadsheetContext}
 
-ARQUIVOS/Pastas relevantes encontrados pelo Drive API:
-${fileList || (spreadsheetQuestion ? 'Busca de arquivos omitida para priorizar planilhas via Sheets API.' : 'Nenhum arquivo encontrado nas pastas compartilhadas.')}
+ARQUIVOS/Planilhas relevantes encontrados pelo Drive API:
+${fileList || (spreadsheetQuestion ? 'Nenhum arquivo adicional encontrado.' : 'Nenhum arquivo encontrado nas pastas compartilhadas.')}
 
 CONTEÚDO DE DOCUMENTOS GOOGLE DOCS:
 ${docs.join('\n\n---\n\n') || 'Nenhum Google Docs textual encontrado no recorte atual.'}
-`, finance ? 150000 : 45000);
+`, finance ? 180000 : 70000);
 
-  return { connected, context, files, matchingFilesError: matchingFiles.error, recentFilesError: recentFiles.error };
+  return { connected, context, files, discoveredSheets: discoveredSheets.length, matchingFilesError: matchingFiles.error, recentFilesError: recentFiles.error };
 }
 
 module.exports = { buildDriveContext };
