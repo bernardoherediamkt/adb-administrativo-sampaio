@@ -1,0 +1,201 @@
+const fs = require('fs');
+const path = require('path');
+const { buildDriveContext } = require('./_drive-context');
+
+function readMemoryFile(relativePath, fallback = '') {
+  try {
+    return fs.readFileSync(path.join(process.cwd(), relativePath), 'utf8');
+  } catch (error) {
+    return fallback;
+  }
+}
+
+async function readJson(req) {
+  if (req.body && typeof req.body === 'object') return req.body;
+  let body = '';
+  for await (const chunk of req) body += chunk;
+  try { return JSON.parse(body || '{}'); } catch { return {}; }
+}
+
+function clip(text, max = 120000) {
+  const value = String(text || '');
+  return value.length > max ? value.slice(0, max) + '\n...[conteúdo reduzido por limite de contexto]...' : value;
+}
+
+function cleanAdamAnswer(text) {
+  let value = String(text || '').replace(/\r/g, '');
+
+  // Remove marcas visuais de Markdown que atrapalham o widget.
+  value = value.replace(/```[a-zA-Z0-9_-]*\n?/g, '').replace(/```/g, '');
+  value = value.replace(/^\s{0,3}#{1,6}\s*/gm, '');
+  value = value.replace(/\*\*(.*?)\*\*/g, '$1');
+  value = value.replace(/__(.*?)__/g, '$1');
+  value = value.replace(/`([^`]+)`/g, '$1');
+  value = value.replace(/^\s*[-*_]{3,}\s*$/gm, '');
+  value = value.replace(/^\s*[-*]\s+/gm, '• ');
+
+  // Bloqueia vazamento de instruções internas comuns.
+  value = value.replace(/^.*No horizontal lines.*$/gmi, '');
+  value = value.replace(/^.*No backticks.*$/gmi, '');
+  value = value.replace(/^.*Clean text.*$/gmi, '');
+  value = value.replace(/^.*Drafting the content.*$/gmi, '');
+  value = value.replace(/^.*FORMATO DA RESPOSTA.*$/gmi, '');
+  value = value.replace(/^.*INSTRUÇÃO INTERNA.*$/gmi, '');
+
+  value = value.replace(/\n{3,}/g, '\n\n');
+  return value.trim();
+}
+
+function normalizeHistory(history) {
+  if (!Array.isArray(history)) return [];
+  return history.slice(-8).map((item) => {
+    const role = item.role === 'model' ? 'model' : 'user';
+    const text = String(item.text || item.content || '').slice(0, 1500);
+    return { role, parts: [{ text }] };
+  }).filter((item) => item.parts[0].text.trim());
+}
+
+async function fetchDriveContext(query) {
+  try {
+    return await buildDriveContext(query);
+  } catch (error) {
+    return {
+      connected: false,
+      context: 'Google Drive ainda não conectado via Service Account ou sem permissão nas pastas. Detalhe: ' + error.message
+    };
+  }
+}
+
+function buildSystemPrompt() {
+  const base = readMemoryFile('memoria_adam/ADAM_SYSTEM_PROMPT_ADB_SAMPAIO.txt', 'Você é Adam, Assistente Virtual da ADB Sampaio.');
+  const memoria = readMemoryFile('memoria_adam/ADAM_MEMORIA_COMPLETA_ADB_SAMPAIO.md', '');
+
+  return clip(`
+${base}
+
+IDENTIDADE DO ADAM NO APP:
+- Seu nome é Adam, Assistente Virtual da ADB Sampaio.
+- Você serve ao Pastor Bernardo e à equipe da ADB Sampaio.
+- Responda em português do Brasil.
+- Seja pastoral, claro, organizado, objetivo e confiável.
+- Use uma linguagem humana, simples e agradável.
+- Use emojis com moderação quando ajudarem na leitura.
+- Não use Markdown bruto: não use **asteriscos**, ###, ---, crases, blocos de código ou símbolos decorativos.
+- Para listas, use bullets simples com “•”.
+- Para assuntos bíblicos, mantenha Jesus no centro, Deus como protagonista e aplicação prática.
+
+REGRAS DE PRECISÃO FINANCEIRA:
+- Em assuntos financeiros, nunca chute valores.
+- Nunca invente, ajuste ou complete valor que não esteja visível no contexto das planilhas.
+- Se um valor não estiver explícito, diga que não encontrou com segurança.
+- Ao calcular totais, some apenas valores claramente identificados no contexto.
+- Se a linha/descrição estiver ambígua, separe como “pendente de conferência” e não some no total confirmado.
+- Quando possível, informe mês, aba, linha, descrição e valor.
+- Se o usuário pedir gastos de um evento, use a inteligência para identificar descrições relacionadas ao evento, mas mantenha dois grupos: confirmados e possíveis/pendentes.
+- Não inclua despesas genéricas sem relação clara. Se uma despesa parecer relacionada, explique o motivo e marque como pendente.
+- Se o usuário corrigir um valor, não invente outro valor; volte ao contexto, confira a linha e responda com cuidado.
+- Se não houver contexto suficiente para uma resposta exata, diga isso com honestidade e peça o mês, aba ou descrição que deve ser conferida.
+
+MEMÓRIA COMPLETA DA ADB SAMPAIO:
+${memoria}
+`, 120000);
+}
+
+async function callGemini({ systemPrompt, driveContext, message, history }) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('GEMINI_API_KEY não configurada na Vercel.');
+
+  const requested = process.env.GEMINI_TEXT_MODEL || process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+  const models = Array.from(new Set([
+    requested,
+    'gemini-3.5-flash',
+    'gemini-3-flash',
+    'gemini-3.1-flash-lite',
+    'gemini-2.5-flash'
+  ].filter(Boolean)));
+
+  const finalUserMessage = `
+PERGUNTA DO USUÁRIO:
+${message}
+
+CONTEXTO DO GOOGLE DRIVE E DAS PLANILHAS:
+${driveContext.context}
+
+INSTRUÇÃO PARA ESTA RESPOSTA:
+Use a memória fixa da ADB para tom, estilo, visão bíblica e pastoral.
+Use o contexto do Drive/Planilhas para dados administrativos e financeiros.
+Para planilhas, use sempre os dados da seção “DADOS DE PLANILHAS LIDOS DIRETAMENTE PELA GOOGLE SHEETS API”. Essa seção é a fonte oficial dos valores.
+Para financeiro, você pode interpretar as tabelas com inteligência, mas deve obedecer a precisão: só afirme e some valores visíveis no contexto da Sheets API. Nunca chute, nunca complete lacunas e nunca invente valores.
+Se listar despesas, mostre os itens encontrados com mês, aba/linha quando disponível, descrição e valor.
+Se houver itens relacionados por interpretação, deixe separado como “possíveis/pendentes de conferência” e não some no total confirmado.
+Não forneça links de planilha, a menos que o usuário peça.
+
+FORMATO:
+Texto limpo, direto e legível no widget. Sem Markdown bruto. Use emojis com moderação e bullets simples.
+`;
+
+  let lastError = null;
+  for (const model of models) {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const payload = {
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: [
+        ...normalizeHistory(history),
+        { role: 'user', parts: [{ text: finalUserMessage }] }
+      ],
+      generationConfig: {
+        temperature: 0.18,
+        topP: 0.85,
+        maxOutputTokens: 5200
+      }
+    };
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        lastError = new Error((data.error && data.error.message) || `Erro Gemini ${response.status} no modelo ${model}`);
+        continue;
+      }
+      const parts = data?.candidates?.[0]?.content?.parts || [];
+      const answer = parts.map((part) => part.text || '').join('\n').trim();
+      if (answer) return { answer: cleanAdamAnswer(answer), model };
+      lastError = new Error(`O modelo ${model} não retornou texto.`);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error('Não foi possível chamar o Gemini.');
+}
+
+module.exports = async function handler(req, res) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido.' });
+
+  try {
+    const body = await readJson(req);
+    const message = String(body.message || '').trim();
+    if (!message) return res.status(400).json({ error: 'Mensagem vazia.' });
+
+    const driveContext = await fetchDriveContext(message);
+    const systemPrompt = buildSystemPrompt();
+    const result = await callGemini({
+      systemPrompt,
+      driveContext,
+      message,
+      history: body.history || []
+    });
+
+    return res.status(200).json({
+      answer: result.answer,
+      model: result.model,
+      driveConnected: driveContext.connected
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || 'Erro interno no Adam.' });
+  }
+};

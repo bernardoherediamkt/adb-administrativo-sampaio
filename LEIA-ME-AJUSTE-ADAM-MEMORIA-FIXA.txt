@@ -1,0 +1,26 @@
+ADB Administrativo - Adam Memória Fixa + Precisão Financeira
+
+Esta versão remove as regras financeiras rígidas demais e volta para a lógica principal:
+
+1. Adam usa a memória fixa teológica, bíblica, pastoral e administrativa do projeto.
+2. Adam lê as planilhas do Google Drive via Service Account.
+3. Gemini interpreta as planilhas e calcula com base no contexto.
+4. Foram mantidas regras de precisão:
+   - nunca chutar valores financeiros;
+   - só afirmar valores visíveis nas linhas da planilha;
+   - separar itens pendentes/ambíguos;
+   - quando possível, citar mês, aba, linha, descrição e valor;
+   - não dar link de planilha a menos que o usuário peça.
+
+Para aplicar:
+- Suba todos os arquivos deste pacote no GitHub, substituindo os antigos.
+- Faça Commit changes.
+- Na Vercel, faça Redeploy.
+
+Variáveis necessárias na Vercel:
+GEMINI_API_KEY
+GEMINI_TEXT_MODEL=gemini-3.5-flash
+GOOGLE_SERVICE_ACCOUNT_EMAIL
+GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY
+GOOGLE_DRIVE_FOLDER_IDS
+

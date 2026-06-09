@@ -1,0 +1,23 @@
+ADB Administrativo - Adam com Google Sheets API Direta
+
+Esta versão mantém a memória fixa do Adam e prioriza a Google Sheets API para toda leitura de planilhas.
+
+O que mudou:
+- Quando a pergunta envolve financeiro, planilhas, membros, entradas, saídas, dízimos, ofertas, eventos ou relatórios, o Adam consulta as planilhas diretamente pela Google Sheets API.
+- O Drive API continua sendo usado para documentos e arquivos, mas não é mais a fonte principal para valores de planilhas.
+- O contexto enviado ao Gemini agora informa linha, coluna e aba sempre que possível.
+- O Gemini continua interpretando os dados, mas com regra de precisão: não chutar valores e só somar números visíveis no contexto.
+
+Variáveis necessárias na Vercel:
+GEMINI_API_KEY
+GEMINI_TEXT_MODEL=gemini-3.5-flash
+GOOGLE_SERVICE_ACCOUNT_EMAIL
+GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY
+GOOGLE_DRIVE_FOLDER_IDS
+
+Opcionais:
+ADAM_SHEETS_MAX_ROWS=1200
+ADAM_SHEETS_MAX_COLS=52
+GOOGLE_EXTRA_SPREADSHEET_IDS=id1,id2,id3
+
+Após subir no GitHub, faça Redeploy na Vercel.
