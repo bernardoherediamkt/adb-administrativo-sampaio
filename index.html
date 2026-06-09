@@ -2105,7 +2105,7 @@ Se houver foto do preletor enviada, preserve a identidade visual da pessoa e use
         const q = String(question || '').toLowerCase();
 
         if (q.includes('drive') || q.includes('documento') || q.includes('finance') || q.includes('entrada') || q.includes('saída') || q.includes('saida') || q.includes('planilha')) {
-          return 'O Adam está instalado no app. Para eu consultar documentos, planilhas, relatórios financeiros e movimentos de entrada/saída do Drive, configure na Vercel as variáveis ADAM_DRIVE_WEBAPP_URL e ADAM_DRIVE_TOKEN depois de publicar o conector do Google Apps Script na conta ministerioadbsampaio@gmail.com.';
+          return 'O Adam está instalado no app. Para eu consultar documentos, planilhas, relatórios financeiros e movimentos de entrada/saída do Drive, configure na Vercel a Service Account do Google Drive com GOOGLE_SERVICE_ACCOUNT_EMAIL e GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY, e compartilhe as pastas da ADB com esse e-mail técnico.';
         }
 
         if (q.includes('preg') || q.includes('serm') || q.includes('mensagem')) {

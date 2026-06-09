@@ -5,6 +5,7 @@ module.exports = async function handler(req, res) {
     app: 'ADB Administrativo',
     assistant: 'Adam Assistente Virtual',
     geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
-    driveConnectorConfigured: Boolean(process.env.ADAM_DRIVE_WEBAPP_URL && process.env.ADAM_DRIVE_TOKEN)
+    driveConnectorConfigured: Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY),
+    driveMethod: 'service_account'
   });
 };

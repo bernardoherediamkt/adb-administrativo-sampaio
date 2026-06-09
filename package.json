@@ -1,8 +1,8 @@
 {
-  "name": "adb-administrativo-adam-drive",
+  "name": "adb-administrativo-adam-service-account",
   "version": "1.0.0",
   "private": true,
-  "description": "ADB Administrativo com Adam Assistente Virtual integrado ao Gemini e preparado para Google Drive.",
+  "description": "ADB Administrativo com Adam Assistente Virtual integrado ao Gemini e Google Drive API via Service Account.",
   "scripts": {
     "start": "vercel dev"
   },

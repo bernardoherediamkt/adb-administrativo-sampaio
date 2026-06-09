@@ -1,3 +1,5 @@
+const { buildDriveContext } = require('./_drive-context');
+
 async function readJson(req) {
   if (req.body && typeof req.body === 'object') return req.body;
   let body = '';
@@ -7,31 +9,27 @@ async function readJson(req) {
 
 module.exports = async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  if (req.method !== 'GET' && req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido.' });
-
-  const url = process.env.ADAM_DRIVE_WEBAPP_URL;
-  const token = process.env.ADAM_DRIVE_TOKEN;
-  if (!url || !token) {
-    return res.status(200).json({
-      connected: false,
-      message: 'Conector do Google Drive ainda não configurado. Configure ADAM_DRIVE_WEBAPP_URL e ADAM_DRIVE_TOKEN na Vercel.'
-    });
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    return res.status(405).json({ error: 'Método não permitido.' });
   }
 
-  const body = req.method === 'POST' ? await readJson(req) : {};
-  const query = body.query || req.query?.query || 'teste de conexão';
-
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, query, mode: 'health' })
+    const body = req.method === 'POST' ? await readJson(req) : {};
+    const query = body.query || req.query?.query || 'teste de conexão Drive ADB Sampaio';
+    const result = await buildDriveContext(query);
+    return res.status(200).json({
+      connected: true,
+      method: 'service_account',
+      message: 'Google Drive conectado via Service Account.',
+      filesFound: Array.isArray(result.files) ? result.files.length : 0,
+      preview: String(result.context || '').slice(0, 2500)
     });
-    const text = await response.text();
-    let data;
-    try { data = JSON.parse(text); } catch { data = { raw: text }; }
-    return res.status(response.ok ? 200 : response.status).json(data);
   } catch (error) {
-    return res.status(500).json({ connected: false, error: error.message });
+    return res.status(500).json({
+      connected: false,
+      method: 'service_account',
+      error: error.message,
+      help: 'Confira GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY e se as pastas/planilhas foram compartilhadas com o e-mail da Service Account.'
+    });
   }
 };

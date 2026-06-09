@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { buildDriveContext } = require('./_drive-context');
 
 function readMemoryFile(relativePath, fallback = '') {
   try {
@@ -31,41 +32,16 @@ function normalizeHistory(history) {
 }
 
 async function fetchDriveContext(query) {
-  const url = process.env.ADAM_DRIVE_WEBAPP_URL;
-  const token = process.env.ADAM_DRIVE_TOKEN;
-  if (!url || !token) {
+  try {
+    return await buildDriveContext(query);
+  } catch (error) {
     return {
       connected: false,
-      context: 'Google Drive ainda não conectado. Para respostas administrativas reais, configure ADAM_DRIVE_WEBAPP_URL e ADAM_DRIVE_TOKEN na Vercel.'
+      context: 'Google Drive ainda não conectado via Service Account ou sem permissão nas pastas. Detalhe: ' + error.message
     };
-  }
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 18000);
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, query, mode: 'context' }),
-      signal: controller.signal
-    });
-    const text = await response.text();
-    let data;
-    try { data = JSON.parse(text); } catch { data = { context: text }; }
-    if (!response.ok) {
-      return { connected: false, context: 'Erro ao consultar Google Drive: ' + (data.error || data.message || response.status) };
-    }
-    return {
-      connected: Boolean(data.connected !== false),
-      context: clip(data.context || data.summary || JSON.stringify(data, null, 2), 16000),
-      raw: data
-    };
-  } catch (error) {
-    return { connected: false, context: 'Erro ao conectar ao Google Drive: ' + error.message };
-  } finally {
-    clearTimeout(timeout);
   }
 }
+
 
 function buildSystemPrompt() {
   const base = readMemoryFile('memoria_adam/ADAM_SYSTEM_PROMPT_ADB_SAMPAIO.txt', 'Você é Adam, Assistente Virtual da ADB Sampaio.');
