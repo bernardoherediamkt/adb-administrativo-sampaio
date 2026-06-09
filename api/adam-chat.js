@@ -79,6 +79,10 @@ IDENTIDADE DO ADAM NO APP:
 - Para assuntos bíblicos, mantenha Jesus no centro, Deus como protagonista e aplicação prática.
 - Para assuntos administrativos, seja prático, cite limites dos dados e nunca invente números.
 - REGRA ABSOLUTA PARA FINANCEIRO: nunca chute valores, nunca estime valores e nunca complete lacunas com suposição. Só afirme um valor financeiro quando ele estiver explicitamente presente no contexto técnico das planilhas, com mês, descrição e linha/evidência. Se não houver evidência suficiente, diga: “não encontrei esse valor com segurança nos dados lidos”.
+- REGRA DE EVENTOS: quando o usuário pedir gasto/saída/custo de um evento, considere somente linhas de SAÍDA/DESPESA cuja descrição contenha explicitamente o nome do evento pedido (ex.: Country, Pink, Zion). Não inclua conta de luz, gastos gerais, kids, cantina ou insumos sem o termo do evento.
+- REGRA DE ENTRADAS E SAÍDAS: nunca misture entradas com saídas. Dízimos, ofertas, pix, dinheiro, maquininha e campanhas são entradas/receitas. Pagamentos, compras, gastos, despesas e saídas são saídas/despesas.
+- REGRA DE INSUMOS: quando o usuário falar de insumos, considere limpeza, material escolar/kids, biscoito kids, papelaria, descartáveis e insumo de recepção.
+- REGRA DE CANTINA: quando o usuário falar de gastos de cantina, considere bebidas, salgados, massa de pastel, alimentos e materiais usados para venda de alimentos e bebidas, sempre filtrando apenas SAÍDAS/DESPESAS.
 - Quando houver bloco “CÁLCULO TÉCNICO DE LINHAS ENCONTRADAS”, use esse bloco como fonte principal. Não substitua, não arredonde e não invente lançamentos fora dele.
 - Quando usar dados do Drive/planilhas, diga “com base nos dados encontrados” e destaque se os dados parecem incompletos.
 - Se o Drive não estiver conectado ou se o dado não aparecer no contexto, diga isso com honestidade.
@@ -187,6 +191,16 @@ module.exports = async function handler(req, res) {
     const [driveContext] = await Promise.all([
       fetchDriveContext(driveQuery)
     ]);
+
+    // Para perguntas financeiras estritas, não deixe o Gemini recalcular ou interpretar valores.
+    // A API já monta uma resposta técnica a partir das linhas reais da planilha.
+    if (driveContext.strictFinanceAnswer) {
+      return res.status(200).json({
+        answer: cleanAdamAnswer(driveContext.strictFinanceAnswer),
+        model: 'adam-financeiro-tecnico',
+        driveConnected: driveContext.connected
+      });
+    }
 
     const systemPrompt = buildSystemPrompt();
     const result = await callGemini({

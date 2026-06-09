@@ -219,8 +219,12 @@ function brl(value) {
 }
 
 const QUERY_STOPWORDS = new Set([
-  'quanto','gasto','gastos','gastou','com','das','dos','de','do','da','desse','deste','dessa','desta','ano','mes','mês','semestre','primeiro','segundo','relatorio','relatório','detalhado','detalhe','inclua','incluir','recalcule','recalcular','valor','exato','exata','financeiro','pode','me','dar','um','uma','os','as','o','a','no','na','nos','nas','para','por','foi','foram','esse','essa','este','esta','adam','pastor','bernardo','verifique','verificar','chute','chutar','valores'
+  'quanto','gasto','gastos','gastou','com','das','dos','de','do','da','desse','deste','dessa','desta','ano','mes','mês','semestre','primeiro','segundo','relatorio','relatório','detalhado','detalhe','detalhes','inclua','incluir','recalcule','recalcular','valor','exato','exata','financeiro','pode','me','dar','um','uma','os','as','o','a','no','na','nos','nas','para','por','foi','foram','esse','essa','este','esta','adam','pastor','bernardo','verifique','verificar','chute','chutar','valores','liste','listar','todas','todos','despesas','despesa','encontrou','encontradas','desconheco','desconheço','explique','detalhadamente'
 ]);
+
+const MONTH_WORDS = /(janeiro|fevereiro|marco|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)/;
+const EXPENSE_WORDS = /(gasto|gastos|gastou|saida|saidas|saída|saídas|despesa|despesas|custo|custou|investido|pago|pagamento|pagamentos|compra|compras|relatorio de gastos|relatório de gastos)/;
+const INCOME_WORDS = /(entrada|entradas|receita|receitas|dizimo|dizimos|dízimo|dízimos|oferta|ofertas|campanha|cantina|pix|maquininha|dinheiro|recebido|recebimento)/;
 
 function queryTerms(query) {
   const q = normalizeText(query);
@@ -237,30 +241,101 @@ function queryTerms(query) {
   return important.slice(0, 12);
 }
 
+function inferEventTerms(query) {
+  const q = normalizeText(query);
+  const events = [];
+  const add = (label, terms) => {
+    if (!events.some((event) => event.label === label)) events.push({ label, terms });
+  };
+
+  if (/country|festa country/.test(q)) add('Festa Country', ['country']);
+  if (/pink|pink conference/.test(q)) add('Pink', ['pink']);
+  if (/zion/.test(q)) add('Zion', ['zion']);
+  if (/power/.test(q)) add('Power', ['power']);
+  if (/ceia/.test(q)) add('Santa Ceia', ['ceia']);
+  if (/conferencia|conference/.test(q)) add('Conferência', ['conferencia', 'conference']);
+  if (/retiro/.test(q)) add('Retiro', ['retiro']);
+
+  const terms = queryTerms(query).filter((term) => !MONTH_WORDS.test(term) && !/(diesel|caminhao|caminhao|touro|mecanico|mecanico|bebida|bebidas|salgado|salgados|insumo|insumos|cantina|limpeza|kids|papelaria|descartavel|descartaveis|massa|pastel|material|escolar|recepcao|recepção)/.test(term));
+  if (!events.length && /festa|evento|congresso|confraternizacao|confraternização|campanha/.test(q)) {
+    const eventSpecific = terms.filter((term) => !/(festa|evento|congresso|confraternizacao|confraternização|campanha)/.test(term)).slice(0, 3);
+    if (eventSpecific.length) add(eventSpecific.map((t) => t.charAt(0).toUpperCase() + t.slice(1)).join(' '), eventSpecific);
+  }
+
+  return events;
+}
+
 function inferQuestionFocus(query) {
   const q = normalizeText(query);
+  const eventTerms = inferEventTerms(query);
+  const wantsExpenses = EXPENSE_WORDS.test(q) || /quanto foi.*com|quanto.*custou/.test(q);
+  const wantsIncome = INCOME_WORDS.test(q);
+  const asksCantinaExpenses = /cantina/.test(q) && (wantsExpenses || /gasto|despesa|saida|saída/.test(q));
+  const asksInsumos = /insumo|insumos/.test(q);
+  const asksTithesOfferings = /dizim|dízim|ofert/.test(q);
+  let strictType = null;
+
+  if (eventTerms.length && wantsExpenses) strictType = 'event_expenses';
+  else if (asksCantinaExpenses) strictType = 'cantina_expenses';
+  else if (asksInsumos && (wantsExpenses || /movimento|relatorio|relatório|semestre|mensal|mes|mês/.test(q))) strictType = 'insumos_expenses';
+  else if (asksTithesOfferings && (wantsIncome || /quanto|total|semestre|relatorio|relatório/.test(q))) strictType = 'tithes_offerings_income';
+
   return {
     terms: queryTerms(query),
-    isEventLike: /festa|evento|country|congresso|conferencia|confraternizacao|retiro|culto|campanha/.test(q),
+    eventTerms,
+    strictMode: Boolean(strictType),
+    strictType,
+    isEventLike: eventTerms.length > 0 || /festa|evento|congresso|conferencia|confraternizacao|retiro|culto|campanha/.test(q),
     isFinanceTotal: /quanto|total|soma|gasto|gastou|entrada|saida|relatorio|relatório|movimento/.test(q),
-    wantsExpenses: /gasto|gastou|saida|saidas|despesa|despesas|custo|custou|investido|pago|pagamento/.test(q),
-    wantsIncome: /entrada|entradas|receita|receitas|dizimo|dizimos|oferta|ofertas|campanha|cantina|pix|maquininha|dinheiro/.test(q)
+    wantsExpenses,
+    wantsIncome: strictType === 'tithes_offerings_income' ? true : wantsIncome,
+    wantsOnlyExpenses: strictType === 'event_expenses' || strictType === 'cantina_expenses' || strictType === 'insumos_expenses',
+    label: eventTerms[0]?.label || (strictType === 'cantina_expenses' ? 'Cantina' : strictType === 'insumos_expenses' ? 'Insumos' : strictType === 'tithes_offerings_income' ? 'Dízimos e Ofertas' : 'Busca financeira')
   };
 }
 
 function inferHeaders(rows) {
-  const headers = [];
-  for (let i = 0; i < Math.min(rows.length, 25); i++) {
+  const maxCols = Math.max(0, ...((rows || []).slice(0, 30).map((row) => (row || []).length)));
+  const headers = Array(maxCols).fill('');
+  const sectionByCol = Array(maxCols).fill('');
+
+  for (let i = 0; i < Math.min((rows || []).length, 18); i++) {
     const row = rows[i] || [];
-    const normalizedCells = row.map((cell) => normalizeText(cell));
-    const joined = normalizedCells.join(' ');
-    if (/(data|descricao|descrição|historico|histórico|valor|entrada|saida|saída|despesa|receita|saldo|categoria|forma)/.test(joined)) {
-      for (let c = 0; c < row.length; c++) {
-        const h = normalizedCells[c] || '';
-        if (h) headers[c] = h;
+    const markers = [];
+    for (let c = 0; c < row.length; c++) {
+      const cell = normalizeText(row[c]);
+      if (!cell || parseMoney(row[c]) !== null) continue;
+      if (/(^|\b)(entradas?|receitas?|recebimentos?|dizimos?|dízimos?|ofertas?)(\b|$)/.test(cell)) markers.push({ c, section: 'entrada' });
+      if (/(^|\b)(saidas?|saídas?|despesas?|pagamentos?|custos?)(\b|$)/.test(cell)) markers.push({ c, section: 'saida' });
+    }
+    if (markers.length) {
+      markers.sort((a, b) => a.c - b.c);
+      for (let m = 0; m < markers.length; m++) {
+        const start = markers[m].c;
+        const end = m + 1 < markers.length ? markers[m + 1].c : Math.min(maxCols, start + 6);
+        for (let c = start; c < end; c++) sectionByCol[c] = markers[m].section;
       }
     }
   }
+
+  for (let i = 0; i < Math.min((rows || []).length, 30); i++) {
+    const row = rows[i] || [];
+    const normalizedCells = row.map((cell) => normalizeText(cell));
+    const joined = normalizedCells.join(' ');
+    if (/(data|descricao|descrição|historico|histórico|valor|entrada|saida|saída|despesa|receita|saldo|categoria|forma|tipo)/.test(joined)) {
+      for (let c = 0; c < row.length; c++) {
+        const h = normalizedCells[c] || '';
+        if (!h) continue;
+        const section = sectionByCol[c] ? `${sectionByCol[c]} ` : '';
+        headers[c] = `${section}${h}`.trim();
+      }
+    }
+  }
+
+  for (let c = 0; c < headers.length; c++) {
+    if (!headers[c] && sectionByCol[c]) headers[c] = sectionByCol[c];
+  }
+
   return headers;
 }
 
@@ -275,51 +350,130 @@ function valuesWithColumns(row, headers = []) {
   return values;
 }
 
-function selectFinancialAmount(row, headers = [], focus = {}) {
+function isExpenseHeader(header) {
+  return /(saida|saída|despesa|pagamento|pago|debito|débito|custo)/.test(normalizeText(header));
+}
+
+function isIncomeHeader(header) {
+  return /(entrada|receita|credito|crédito|dizimo|dízimo|oferta|campanha|cantina|pix|maquininha|dinheiro|recebimento)/.test(normalizeText(header));
+}
+
+function rowLooksLikeTotal(rowText) {
+  const text = normalizeText(rowText);
+  return /(total geral|total de|soma|subtotal|saldo|caixa atual|resumo|consolidado)/.test(text);
+}
+
+function selectFinancialAmount(row, headers = [], focus = {}, tabName = '') {
   const values = valuesWithColumns(row, headers);
-  if (!values.length) return { amount: null, confidence: 'none', reason: 'nenhum valor monetário detectado', values };
+  const rowText = (row || []).map((cell) => String(cell || '').trim()).filter(Boolean).join(' | ');
+  const normRow = normalizeText(rowText);
+  const normTab = normalizeText(tabName);
+  if (!values.length) return { amount: null, confidence: 'none', reason: 'nenhum valor monetário detectado', values, kind: 'none' };
+  if (rowLooksLikeTotal(rowText)) return { amount: null, confidence: 'ignored_total', reason: 'linha de total/saldo/resumo não é lançamento individual', values, kind: 'ignored' };
+
+  const desired = focus.wantsOnlyExpenses ? 'expense' : (focus.wantsIncome && !focus.wantsExpenses ? 'income' : (focus.wantsIncome ? 'income' : (focus.wantsExpenses ? 'expense' : 'any')));
 
   const scored = values.map((v) => {
     const h = normalizeText(v.header);
+    let kind = 'unknown';
+    if (isExpenseHeader(h)) kind = 'expense';
+    if (isIncomeHeader(h)) kind = 'income';
+    if (kind === 'unknown' && /saida|saída|despesa|pagamento|pago|compra/.test(normTab)) kind = 'expense';
+    if (kind === 'unknown' && /entrada|receita|dizimo|oferta/.test(normTab)) kind = 'income';
+
     let score = 0;
+    if (desired === kind) score += 20;
+    if (desired === 'any') score += 2;
     if (/valor/.test(h)) score += 5;
-    if (focus.wantsExpenses && /(saida|despesa|pago|pagamento|debito)/.test(h)) score += 9;
-    if (focus.wantsIncome && /(entrada|receita|credito|dizimo|oferta|campanha|cantina)/.test(h)) score += 9;
-    if (/(saldo|total acumulado|acumulado|caixa)/.test(h)) score -= 12;
-    if (/data|dia|mes|mês|ano/.test(h)) score -= 10;
+    if (/(data|dia|mes|mês|ano|telefone|cpf|cnpj|id)/.test(h)) score -= 15;
+    if (/(saldo|total acumulado|acumulado|caixa)/.test(h)) score -= 20;
+    if (kind === 'income' && desired === 'expense') score -= 40;
+    if (kind === 'expense' && desired === 'income') score -= 40;
     if (Math.abs(v.amount) > 0) score += 1;
-    return { ...v, score };
-  }).sort((a, b) => b.score - a.score);
+    return { ...v, kind, score };
+  }).sort((a, b) => (b.score - a.score) || (b.column - a.column));
 
-  if (scored[0].score >= 5) {
-    return { amount: scored[0].amount, confidence: 'high', reason: `coluna ${scored[0].column}${scored[0].header ? ` (${scored[0].header})` : ''}`, values };
+  const best = scored[0];
+  if (desired !== 'any') {
+    const sameKind = scored.filter((v) => v.kind === desired && v.score >= 15);
+    if (sameKind.length === 1) {
+      const v = sameKind[0];
+      return { amount: v.amount, confidence: 'high', reason: `coluna ${v.column}${v.header ? ` (${v.header})` : ''}`, values, kind: desired };
+    }
+    if (sameKind.length > 1) {
+      const valueHeaders = sameKind.filter((v) => /valor/.test(normalizeText(v.header)));
+      const chosen = valueHeaders[0] || sameKind[0];
+      return { amount: chosen.amount, confidence: 'medium', reason: `melhor candidato de ${desired === 'expense' ? 'saída' : 'entrada'} na coluna ${chosen.column}${chosen.header ? ` (${chosen.header})` : ''}; havia ${sameKind.length} valores do mesmo tipo`, values, kind: desired };
+    }
+
+    // Sem coluna identificável: só aceita como pendente/ambígua, nunca soma automaticamente.
+    if (values.length === 1) {
+      const opposite = desired === 'expense' ? /(dizim|dízim|ofert|receita|entrada)/.test(normRow) : /(saida|saída|despesa|pagamento|pago|compra)/.test(normRow);
+      if (!opposite && /(saida|saída|despesa|pagamento|pago|compra|entrada|receita|dizim|dízim|ofert)/.test(normRow + ' ' + normTab)) {
+        return { amount: values[0].amount, confidence: 'medium', reason: `único valor monetário em contexto de ${desired === 'expense' ? 'saída' : 'entrada'}, coluna ${values[0].column}`, values, kind: desired };
+      }
+    }
+    return { amount: null, confidence: 'ambiguous', reason: `não encontrei uma coluna confiável de ${desired === 'expense' ? 'saída/despesa' : 'entrada/receita'} nesta linha; não somado`, values, kind: 'ambiguous' };
   }
 
-  if (values.length === 1) {
-    return { amount: values[0].amount, confidence: 'medium', reason: `único valor monetário na linha, coluna ${values[0].column}`, values };
-  }
-
-  return { amount: null, confidence: 'ambiguous', reason: `linha tem ${values.length} valores monetários e nenhuma coluna confiável; requer conferência`, values };
+  if (best.score >= 5) return { amount: best.amount, confidence: 'medium', reason: `melhor valor monetário na coluna ${best.column}${best.header ? ` (${best.header})` : ''}`, values, kind: best.kind };
+  if (values.length === 1) return { amount: values[0].amount, confidence: 'medium', reason: `único valor monetário na linha, coluna ${values[0].column}`, values, kind: 'unknown' };
+  return { amount: null, confidence: 'ambiguous', reason: `linha tem ${values.length} valores monetários e nenhuma coluna confiável; requer conferência`, values, kind: 'ambiguous' };
 }
 
 function rowMatchesQuery(rowText, focus) {
   const text = normalizeText(rowText);
-  const terms = focus.terms || [];
-  if (!terms.length) return false;
 
-  // Para eventos, exigimos o termo forte do evento. Ex: festa/country.
-  if (focus.isEventLike) {
-    const strong = terms.filter((t) => !/(janeiro|fevereiro|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|diesel|valor|exato)/.test(t));
-    if (strong.length) return strong.some((t) => text.includes(t));
+  if (focus.strictType === 'event_expenses') {
+    const terms = focus.eventTerms.flatMap((event) => event.terms || []);
+    return terms.length > 0 && terms.some((term) => text.includes(term));
   }
 
-  // Para buscas comuns, considera linha relevante quando ao menos um termo específico aparece.
+  if (focus.strictType === 'cantina_expenses') {
+    return /(cantina|bebida|bebidas|salgado|salgados|massa de pastel|pastel|refrigerante|coca|guarana|guaraná|agua|água|suco|alimento|alimentacao|alimentação|lanche|lanches|descartavel|descartáveis|descartaveis|copo|copos|prato|pratos|talher|talheres|guardanapo)/.test(text);
+  }
+
+  if (focus.strictType === 'insumos_expenses') {
+    return /(insumo|insumos|limpeza|material escolar|biscoito|kids|crianca|criança|infantil|papelaria|descartavel|descartáveis|descartaveis|recepcao|recepção|higiene|higienico|higiênico|sabonete|alcool|álcool|detergente|desinfetante|saco de lixo|lixo)/.test(text);
+  }
+
+  if (focus.strictType === 'tithes_offerings_income') {
+    return /(dizimo|dízimo|dizimos|dízimos|oferta|ofertas)/.test(text);
+  }
+
+  const terms = focus.terms || [];
+  if (!terms.length) return false;
   return terms.some((t) => text.includes(t));
+}
+
+function inferMatchCategory(rowText, focus) {
+  const text = normalizeText(rowText);
+  if (focus.strictType === 'tithes_offerings_income') {
+    if (/dizim|dízim/.test(text)) return 'Dízimos';
+    if (/ofert/.test(text)) return 'Ofertas';
+  }
+  if (focus.strictType === 'cantina_expenses') {
+    if (/bebida|refrigerante|coca|guarana|guaraná|agua|água|suco/.test(text)) return 'Bebidas';
+    if (/salgado|salgados/.test(text)) return 'Salgados';
+    if (/massa de pastel|pastel/.test(text)) return 'Massa de pastel/Pastel';
+    if (/descartavel|descartáveis|descartaveis|copo|copos|prato|talher|guardanapo/.test(text)) return 'Materiais de venda/descartáveis';
+    return 'Cantina';
+  }
+  if (focus.strictType === 'insumos_expenses') {
+    if (/limpeza|higiene|detergente|desinfetante|saco de lixo|lixo|alcool|álcool/.test(text)) return 'Limpeza';
+    if (/material escolar|papelaria/.test(text)) return 'Material escolar/Papelaria';
+    if (/kids|crianca|criança|infantil|biscoito/.test(text)) return 'Kids';
+    if (/descartavel|descartáveis|descartaveis/.test(text)) return 'Descartáveis';
+    if (/recepcao|recepção/.test(text)) return 'Insumo de recepção';
+    return 'Insumos';
+  }
+  if (focus.strictType === 'event_expenses') return focus.label || 'Evento';
+  return detectCategory(rowText) || 'Outros';
 }
 
 function buildQueryAudit(tabs, query) {
   const focus = inferQuestionFocus(query);
-  if (!focus.terms.length) return null;
+  if (!focus.terms.length && !focus.strictMode) return null;
 
   const matches = [];
   let selectedTotal = 0;
@@ -333,8 +487,10 @@ function buildQueryAudit(tabs, query) {
       const rowText = row.map((cell) => String(cell || '').trim()).filter(Boolean).join(' | ');
       if (!rowText || !rowMatchesQuery(rowText, focus)) continue;
 
-      const selected = selectFinancialAmount(row, headers, focus);
-      if (selected.amount !== null && selected.confidence !== 'ambiguous') {
+      const selected = selectFinancialAmount(row, headers, focus, tab.tab);
+      const category = inferMatchCategory(rowText, focus);
+      const canSum = selected.amount !== null && selected.confidence !== 'ambiguous' && selected.confidence !== 'ignored_total' && (!focus.wantsOnlyExpenses || selected.kind === 'expense') && (!(focus.strictType === 'tithes_offerings_income') || selected.kind === 'income');
+      if (canSum) {
         selectedTotal += selected.amount;
         selectedCount += 1;
       } else if (selected.values.length) {
@@ -345,9 +501,13 @@ function buildQueryAudit(tabs, query) {
         tab: tab.tab,
         rowNumber: i + 1,
         text: rowText.slice(0, 650),
-        amount: selected.amount,
+        amount: canSum ? selected.amount : null,
+        rawAmount: selected.amount,
+        category,
         confidence: selected.confidence,
         reason: selected.reason,
+        kind: selected.kind,
+        included: canSum,
         allValues: selected.values.map((v) => `${brl(v.amount)} na coluna ${v.column}${v.header ? ` (${v.header})` : ''}`)
       });
     }
@@ -366,22 +526,108 @@ function auditToText(audit, monthLabel) {
   if (!audit) return '';
   const lines = [];
   lines.push(`CÁLCULO TÉCNICO DE LINHAS ENCONTRADAS: ${monthLabel}`);
-  lines.push(`Termos usados na busca: ${audit.focus.terms.join(', ') || 'nenhum'}`);
+  lines.push(`Tipo de busca: ${audit.focus.strictType || 'geral'} | Critério: ${audit.focus.label || audit.focus.terms.join(', ') || 'termos do usuário'}`);
+  lines.push(`Regra aplicada: somente ${audit.focus.wantsOnlyExpenses ? 'SAÍDAS/DESPESAS' : audit.focus.strictType === 'tithes_offerings_income' ? 'ENTRADAS/RECEITAS' : 'linhas financeiras'} com descrição compatível são somadas. Entradas não entram em relatório de gastos. Despesas genéricas sem o nome do evento não entram em gastos de evento.`);
   if (!audit.matches.length) {
-    lines.push('Nenhuma linha encontrada com estes termos na leitura completa das abas processadas.');
+    lines.push('Nenhuma linha encontrada com estes critérios na leitura completa das abas processadas.');
     return lines.join('\n');
   }
   lines.push(`Linhas encontradas: ${audit.matches.length}`);
-  lines.push(`Linhas com valor selecionado automaticamente: ${audit.selectedCount}`);
-  lines.push(`Linhas ambíguas/não somadas: ${audit.ambiguousCount}`);
-  lines.push(`Total técnico das linhas com valor confiável: ${brl(audit.selectedTotal)}`);
+  lines.push(`Linhas somadas com segurança: ${audit.selectedCount}`);
+  lines.push(`Linhas pendentes/ambíguas/não somadas: ${audit.ambiguousCount}`);
+  lines.push(`Total técnico confirmado: ${brl(audit.selectedTotal)}`);
   lines.push('Evidências linha a linha:');
-  for (const m of audit.matches.slice(0, 80)) {
-    const amount = m.amount !== null ? brl(m.amount) : 'VALOR NÃO SOMADO';
+  for (const m of audit.matches.slice(0, 100)) {
+    const amount = m.included ? brl(m.amount) : 'NÃO SOMADO';
     const all = m.allValues && m.allValues.length ? ` | valores detectados: ${m.allValues.join('; ')}` : '';
-    lines.push(`• ${m.tab} L${m.rowNumber}: ${m.text} | valor selecionado: ${amount} | confiança: ${m.confidence} | critério: ${m.reason}${all}`);
+    lines.push(`• ${m.included ? 'INCLUÍDA' : 'PENDENTE'} | ${m.tab} L${m.rowNumber} | ${m.category}: ${m.text} | valor considerado: ${amount} | tipo: ${m.kind} | confiança: ${m.confidence} | critério: ${m.reason}${all}`);
   }
   return lines.join('\n');
+}
+
+function buildStrictFinanceAnswerFromAudits(query, auditItems) {
+  const focus = inferQuestionFocus(query);
+  if (!focus.strictMode) return '';
+
+  const included = [];
+  const pending = [];
+  for (const item of auditItems) {
+    for (const match of item.audit.matches || []) {
+      const record = { ...match, monthLabel: item.label };
+      if (match.included) included.push(record);
+      else pending.push(record);
+    }
+  }
+
+  const total = included.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const byMonth = new Map();
+  const byCategory = new Map();
+  for (const item of included) {
+    byMonth.set(item.monthLabel, (byMonth.get(item.monthLabel) || 0) + Number(item.amount || 0));
+    byCategory.set(item.category, (byCategory.get(item.category) || 0) + Number(item.amount || 0));
+  }
+
+  const lines = [];
+  lines.push(`Olá, Pastor Bernardo. Fiz uma conferência técnica nas planilhas conectadas e apliquei uma regra de precisão: eu só somei lançamentos que consegui identificar como ${focus.wantsOnlyExpenses ? 'saída/despesa' : 'entrada/receita'} e que tinham descrição compatível com “${focus.label}”.`);
+  lines.push('');
+  lines.push(`Resumo confirmado ${focus.strictType === 'event_expenses' ? `de gastos com ${focus.label}` : `de ${focus.label}`}:`);
+  lines.push(`• Total confirmado: ${brl(total)}`);
+  lines.push(`• Linhas somadas: ${included.length}`);
+  lines.push(`• Linhas pendentes/não somadas: ${pending.length}`);
+
+  if (byMonth.size) {
+    lines.push('');
+    lines.push('Totais por mês:');
+    for (const [month, value] of Array.from(byMonth.entries())) lines.push(`• ${month}: ${brl(value)}`);
+  }
+
+  if (byCategory.size && (focus.strictType === 'cantina_expenses' || focus.strictType === 'insumos_expenses' || focus.strictType === 'tithes_offerings_income')) {
+    lines.push('');
+    lines.push('Totais por categoria:');
+    for (const [category, value] of Array.from(byCategory.entries()).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))) lines.push(`• ${category}: ${brl(value)}`);
+  }
+
+  if (included.length) {
+    lines.push('');
+    lines.push('Itens considerados no cálculo:');
+    for (const item of included.slice(0, 80)) {
+      lines.push(`• ${item.monthLabel} | ${item.tab} L${item.rowNumber}: ${item.text} — ${brl(item.amount)}`);
+    }
+  } else {
+    lines.push('');
+    lines.push('Não encontrei nenhum lançamento seguro para somar com esses critérios.');
+  }
+
+  if (pending.length) {
+    lines.push('');
+    lines.push('Itens encontrados, mas não somados por segurança:');
+    for (const item of pending.slice(0, 30)) {
+      lines.push(`• ${item.monthLabel} | ${item.tab} L${item.rowNumber}: ${item.text} — motivo: ${item.reason}`);
+    }
+  }
+
+  lines.push('');
+  lines.push('Observação: não incluí contas gerais, entradas, totais de saldo, linhas de resumo ou despesas sem o termo do evento/categoria solicitado.');
+  return lines.join('\n');
+}
+
+async function buildStrictFinanceAnswer({ token, query }) {
+  const focus = inferQuestionFocus(query);
+  if (!focus.strictMode) return '';
+  const selectedSheets = inferRequestedFinanceSheets(query);
+  if (!selectedSheets.length) return '';
+
+  const auditItems = [];
+  for (const sheet of selectedSheets) {
+    try {
+      const tabs = await batchReadSheet({ token, spreadsheetId: sheet.id, maxSheets: 12, maxRows: 1600, maxCols: 38 });
+      const audit = buildQueryAudit(tabs, query);
+      auditItems.push({ label: sheet.label, audit: audit || { matches: [], selectedTotal: 0, selectedCount: 0, ambiguousCount: 0 } });
+    } catch (error) {
+      auditItems.push({ label: sheet.label, audit: { matches: [{ tab: 'Erro de leitura', rowNumber: 0, text: `Não foi possível ler esta planilha: ${error.message}`, amount: null, included: false, confidence: 'error', reason: error.message, allValues: [] }], selectedTotal: 0, selectedCount: 0, ambiguousCount: 1 } });
+    }
+  }
+  return buildStrictFinanceAnswerFromAudits(query, auditItems);
 }
 
 function detectCategory(rowText) {
@@ -601,6 +847,17 @@ async function buildDriveContext(query) {
   const token = await getGoogleAccessToken([DRIVE_SCOPE, SHEETS_SCOPE]);
   const folderIds = envList('GOOGLE_DRIVE_FOLDER_IDS');
   const effectiveFolderIds = folderIds.length ? folderIds : DEFAULT_FOLDER_IDS;
+
+  const financeFocus = inferQuestionFocus(query);
+  if (inferFinanceQuestion(query) && financeFocus.strictMode) {
+    const strictFinanceAnswer = await buildStrictFinanceAnswer({ token, query });
+    return {
+      connected: true,
+      context: `CONEXÃO GOOGLE DRIVE: ativa via Service Account.\n\nRESPOSTA FINANCEIRA TÉCNICA JÁ CALCULADA:\n${strictFinanceAnswer}`,
+      strictFinanceAnswer,
+      files: []
+    };
+  }
 
   const extraSheets = envList('GOOGLE_EXTRA_SPREADSHEET_IDS').map((id, index) => ({
     name: `Planilha extra ${index + 1}`,
