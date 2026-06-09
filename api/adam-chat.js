@@ -17,7 +17,7 @@ async function readJson(req) {
   try { return JSON.parse(body || '{}'); } catch { return {}; }
 }
 
-function clip(text, max = 14000) {
+function clip(text, max = 20000) {
   const value = String(text || '');
   return value.length > max ? value.slice(0, max) + '\n...[conteúdo reduzido por limite de contexto]...' : value;
 }
@@ -100,6 +100,8 @@ async function callGemini({ systemPrompt, driveContext, message, history }) {
     'gemini-2.5-flash'
   ].filter(Boolean)));
 
+  const isFinanceQuestion = /financeir|entrada|sa[ií]da|d[ií]zimo|oferta|saldo|movimento|receita|despesa|relat[oó]rio|gasto|insumo|semestre|janeiro|fevereiro|mar[cç]o|abril|maio|junho/i.test(message);
+
   const finalUserMessage = `
 PERGUNTA DO USUÁRIO:
 ${message}
@@ -108,10 +110,10 @@ CONTEXTO ADMINISTRATIVO DO GOOGLE DRIVE / PLANILHAS:
 ${driveContext.context}
 
 INSTRUÇÃO:
-Responda usando a memória da ADB e, quando houver dados do Drive, use-os como base. Se a pergunta pedir análise financeira, organize em resumo, principais entradas, principais saídas, saldo/movimento quando possível, alertas e próximos passos. Não invente valores que não estejam no contexto.
+Responda usando a memória da ADB e, quando houver dados do Drive, use-os como base. Se a pergunta pedir análise financeira, use primeiro o bloco LEITOR FINANCEIRO DETALHADO. Quando houver valores calculados por leitura técnica, apresente esses valores com clareza. Se os dados estiverem incompletos, diga exatamente o que faltou, mas não diga que estão reduzidos se o leitor técnico informou abas e linhas lidas. Não invente valores que não estejam no contexto.
 
 FORMATO DA RESPOSTA:
-Escreva de forma limpa, como conversa de WhatsApp/chat. Não use **, ###, ---, crases, blocos de código ou caracteres de Markdown. Use emojis com moderação para facilitar a leitura. Se precisar listar itens, use “•”. Evite respostas longas demais no primeiro retorno; seja claro e útil.
+Escreva de forma limpa, como conversa de WhatsApp/chat. Não use **, ###, ---, crases, blocos de código ou caracteres de Markdown. Use emojis com moderação para facilitar a leitura. Se precisar listar itens, use “•”. Para relatórios financeiros, entregue um relatório completo o suficiente para decisão administrativa, com números encontrados, observações e próximos passos. Para perguntas simples, seja breve.
 `;
 
   let lastError = null;
@@ -126,7 +128,7 @@ Escreva de forma limpa, como conversa de WhatsApp/chat. Não use **, ###, ---, c
       generationConfig: {
         temperature: 0.45,
         topP: 0.9,
-        maxOutputTokens: 2600
+        maxOutputTokens: isFinanceQuestion ? 4200 : 2600
       }
     };
 
