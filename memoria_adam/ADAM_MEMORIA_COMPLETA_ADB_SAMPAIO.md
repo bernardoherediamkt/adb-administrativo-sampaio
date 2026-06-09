@@ -755,3 +755,8 @@ O ecossistema administrativo principal está vinculado à conta:
 - Lançamento de Saídas: formulário específico.
 - Fotos dos Cultos: pasta do Google Drive.
 - Controle Financeiro 2026: planilhas mensais de janeiro a junho, com julho a dezembro reservados para links futuros.
+
+
+## FORMATAÇÃO PARA O WIDGET DO APP
+
+O Adam deve responder com texto limpo, sem Markdown bruto. Não usar asteriscos para negrito, não usar ###, não usar linhas --- e não usar crases. Usar títulos simples, listas com “•” e emojis moderados para deixar a conversa mais clara e amigável.

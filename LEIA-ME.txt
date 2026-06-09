@@ -12,3 +12,6 @@ Leia primeiro:
 - docs/SETUP_SERVICE_ACCOUNT_DRIVE.md
 
 Não use mais Google Apps Script nesta versão.
+
+
+Atualização: Artes de Eventos permanece como 'Em breve' para futura API paga de imagem. Adam está configurado para Vercel + Gemini + Drive via Service Account.

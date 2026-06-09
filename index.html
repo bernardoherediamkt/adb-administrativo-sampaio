@@ -1296,15 +1296,14 @@
             <p>Conversa rápida da ADB Sampaio</p>
           </div>
         </div>
-        <span class="adam-badge">Gemini + Drive</span>
-      </div>
+        </div>
 
       <div class="adam-messages" id="adamMessages">
-        <div class="adam-message bot">Paz, Pastor Bernardo. Sou o Adam, Assistente Virtual da ADB Sampaio. Nesta versão para Vercel eu respondo com Gemini e posso consultar a memória bíblica, teológica e administrativa da igreja. Quando o conector do Google Drive estiver configurado, também poderei analisar documentos, planilhas, relatórios financeiros, entradas, saídas e arquivos do ecossistema ministerioadbsampaio@gmail.com.</div>
+        <div class="adam-message bot">Oi, eu sou o Adam, assistente virtual da ADB Sampaio. O que posso te ajudar hoje?</div>
       </div>
 
       <form class="adam-form" id="adamForm">
-        <textarea class="adam-input" id="adamInput" rows="1" placeholder="Escreva aqui... Ex: analise o financeiro de março, me ajude com uma pregação, consulte documentos ou organize a secretaria"></textarea>
+        <textarea class="adam-input" id="adamInput" rows="1" placeholder="Escreva aqui o que você gostaria de saber..."></textarea>
         <button class="adam-send" type="submit" aria-label="Enviar mensagem para o Adam">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
         </button>
@@ -1458,133 +1457,6 @@
     </div>
   </section>
 
-
-
-  <section class="designer-page" id="designerPage" aria-hidden="true">
-    <div class="designer-bar">
-      <button type="button" class="back-btn" aria-label="Voltar ao menu principal" onclick="closeDesigner()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M15 18l-6-6 6-6"></path></svg>
-      </button>
-      <div class="designer-title">
-        <strong>ADB Mídia-Designer</strong>
-        <span>Criação de artes dentro do ADB Administrativo</span>
-      </div>
-    </div>
-
-    <div class="designer-wrap">
-      <div class="designer-hero">
-        <h2>Artes de Eventos <span>ADB Sampaio</span></h2>
-        <p>Crie a direção visual da arte dentro do próprio app, seguindo o estilo moderno, premium, editorial, worship e cinematográfico da ADB Sampaio.</p>
-      </div>
-
-      <div class="designer-panel">
-        <div class="designer-card">
-          <h3>Dados da arte</h3>
-          <div class="designer-form">
-            <div class="field-group">
-              <label for="arteTitulo">Título do evento</label>
-              <input id="arteTitulo" placeholder="Ex: Culto de Celebração" />
-            </div>
-
-            <div class="field-group">
-              <label for="arteSubtitulo">Subtítulo ou frase</label>
-              <textarea id="arteSubtitulo" placeholder="Ex: Uma noite de adoração, Palavra e presença de Deus"></textarea>
-            </div>
-
-            <div class="designer-row">
-              <div class="field-group">
-                <label for="arteData">Data</label>
-                <input id="arteData" placeholder="Ex: Domingo, 19h" />
-              </div>
-              <div class="field-group">
-                <label for="arteHorario">Horário</label>
-                <input id="arteHorario" placeholder="Ex: 19h" />
-              </div>
-            </div>
-
-            <div class="field-group">
-              <label for="arteLocal">Local</label>
-              <input id="arteLocal" value="Igreja ADB Sampaio" />
-            </div>
-
-            <div class="designer-row">
-              <div class="field-group">
-                <label for="arteTipo">Tipo</label>
-                <select id="arteTipo">
-                  <option>Culto</option>
-                  <option>Conferência</option>
-                  <option>Santa Ceia</option>
-                  <option>Campanha</option>
-                  <option>Juventude</option>
-                  <option>Encontro de Mulheres</option>
-                  <option>Encontro de Homens</option>
-                  <option>Evento Especial</option>
-                </select>
-              </div>
-              <div class="field-group">
-                <label for="arteFormato">Formato</label>
-                <select id="arteFormato">
-                  <option value="3:4">Instagram 3:4</option>
-                  <option value="4:5">Feed 4:5</option>
-                  <option value="9:16">Story 9:16</option>
-                  <option value="1:1">Quadrado 1:1</option>
-                  <option value="16:9">Tela 16:9</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="field-group">
-              <label for="arteObservacoes">Observações criativas</label>
-              <textarea id="arteObservacoes" placeholder="Ex: destaque a foto do preletor, use a logo da igreja, deixe espaço livre para o texto na parte superior"></textarea>
-            </div>
-
-            <div class="upload-block">
-              <h4>Imagens de apoio</h4>
-              <p class="upload-help">Envie fotos do preletor, logo da igreja, imagens de referência ou outros elementos visuais que devam ser considerados na criação do banner.</p>
-
-              <label class="upload-drop" for="arteImagens">
-                <input id="arteImagens" type="file" accept="image/*" multiple onchange="handleDesignerImages(event)" hidden>
-                <strong>Adicionar imagens</strong>
-                <span>Toque para selecionar uma ou várias imagens do celular ou computador.</span>
-              </label>
-
-              <div class="upload-actions">
-                <button type="button" class="btn secondary" onclick="document.getElementById('arteImagens').click()">Selecionar imagens</button>
-                <button type="button" class="btn secondary" onclick="clearDesignerImages()">Limpar imagens</button>
-              </div>
-
-              <div class="upload-list" id="uploadList">
-                <div class="upload-empty">Nenhuma imagem adicionada ainda. Quando você enviar imagens, elas aparecerão aqui com opção de definir o papel de cada uma.</div>
-              </div>
-            </div>
-
-            <div class="designer-note">Dica: você pode enviar a foto do preletor, a logo da igreja e uma imagem de referência visual. O prompt será montado incluindo essas referências para a criação da arte.</div>
-
-            <div class="designer-controls">
-              <button type="button" class="btn" onclick="gerarArteADB()">Gerar arte</button>
-              <button type="button" class="btn secondary" onclick="montarPromptNaTela()">Montar prompt</button>
-              <button type="button" class="btn secondary" onclick="copiarPromptADB()">Copiar prompt</button>
-            </div>
-          </div>
-
-          <p class="designer-status" id="statusArte">A aba já está dentro do app. Agora ela aceita imagens de apoio e está preparada para gerar artes quando a API estiver publicada.</p>
-        </div>
-
-        <div class="designer-card">
-          <h3>Prévia / Prompt</h3>
-          <div class="preview-box" id="previewBox">
-            <div class="preview-empty">
-              <strong>ADB Mídia-Designer</strong>
-              <span>Preencha os dados, envie imagens de apoio e toque em “Montar prompt” ou “Gerar arte”.</span>
-            </div>
-          </div>
-          <textarea class="prompt-box" id="promptArte" placeholder="O prompt da arte aparecerá aqui..."></textarea>
-        </div>
-      </div>
-    </div>
-  </section>
-
-
   <script>
     const mainMenu = document.getElementById('mainMenu');
     const browserPage = document.getElementById('browserPage');
@@ -1735,333 +1607,8 @@
     browserFrame.addEventListener('load', function () {
       setTimeout(function () { loadingLayer.classList.remove('is-visible'); }, 350);
     });
-
-
-    const designerPage = document.getElementById('designerPage');
-    const statusArte = document.getElementById('statusArte');
-    const promptArte = document.getElementById('promptArte');
-    const previewBox = document.getElementById('previewBox');
-
-    // Quando você tiver um backend/API publicado, coloque o link aqui.
-    // Exemplo: const API_ADB_MIDIA_DESIGNER = 'https://seu-servidor.com/api/gerar-arte-evento';
-    const API_ADB_MIDIA_DESIGNER = '/api/gerar-arte';
-
-    function openDesigner() {
-      designerPage.classList.add('is-open');
-      designerPage.setAttribute('aria-hidden', 'false');
-      mainMenu.style.display = 'none';
-      document.body.style.overflow = 'hidden';
-      renderDesignerImages();
-      setTimeout(function () { document.getElementById('arteTitulo').focus(); }, 250);
-    }
-
-    function closeDesigner() {
-      designerPage.classList.remove('is-open');
-      designerPage.setAttribute('aria-hidden', 'true');
-      mainMenu.style.display = '';
-      document.body.style.overflow = '';
-      window.scrollTo(0, 0);
-    }
-
-    const designerImages = [];
-    let designerImageCounter = 0;
-
-    function valorCampo(id) {
-      const el = document.getElementById(id);
-      return el ? String(el.value || '').trim() : '';
-    }
-
-    function escapeHtml(value) {
-      return String(value || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function formatBytes(bytes) {
-      if (!bytes) return 'Tamanho não informado';
-      const units = ['B', 'KB', 'MB', 'GB'];
-      let size = bytes;
-      let unitIndex = 0;
-      while (size >= 1024 && unitIndex < units.length - 1) {
-        size /= 1024;
-        unitIndex += 1;
-      }
-      return (size < 10 && unitIndex > 0 ? size.toFixed(1) : Math.round(size)) + ' ' + units[unitIndex];
-    }
-
-    function defaultRoleByName(name) {
-      const n = String(name || '').toLowerCase();
-      if (n.includes('logo')) return 'Logo da Igreja';
-      if (n.includes('preletor') || n.includes('pregador') || n.includes('pastor')) return 'Foto do Preletor';
-      return 'Imagem de Referência';
-    }
-
-    function renderDesignerImages() {
-      const uploadList = document.getElementById('uploadList');
-      if (!uploadList) return;
-
-      if (!designerImages.length) {
-        uploadList.innerHTML = '<div class="upload-empty">Nenhuma imagem adicionada ainda. Quando você enviar imagens, elas aparecerão aqui com opção de definir o papel de cada uma.</div>';
-        return;
-      }
-
-      uploadList.innerHTML = designerImages.map(function (img, index) {
-        return '<div class="upload-item">'
-          + '<div class="upload-thumb"><img src="' + img.dataUrl + '" alt="' + escapeHtml(img.name) + '"></div>'
-          + '<div class="upload-meta">'
-          +   '<div class="upload-name"><strong title="' + escapeHtml(img.name) + '">' + escapeHtml(img.name) + '</strong><span class="upload-chip">Imagem ' + (index + 1) + '</span></div>'
-          +   '<div class="upload-sub">' + escapeHtml(formatBytes(img.size)) + ' • selecione como essa imagem deve ser usada na arte.</div>'
-          +   '<select onchange="changeDesignerImageRole(' + img.id + ', this.value)">'
-          +     '<option value="Foto do Preletor"' + (img.role === 'Foto do Preletor' ? ' selected' : '') + '>Foto do Preletor</option>'
-          +     '<option value="Logo da Igreja"' + (img.role === 'Logo da Igreja' ? ' selected' : '') + '>Logo da Igreja</option>'
-          +     '<option value="Imagem de Referência"' + (img.role === 'Imagem de Referência' ? ' selected' : '') + '>Imagem de Referência</option>'
-          +     '<option value="Fundo / Elemento Extra"' + (img.role === 'Fundo / Elemento Extra' ? ' selected' : '') + '>Fundo / Elemento Extra</option>'
-          +   '</select>'
-          +   '<div class="upload-actions"><button type="button" class="btn secondary" onclick="removeDesignerImage(' + img.id + ')">Remover</button></div>'
-          + '</div>'
-          + '</div>';
-      }).join('');
-    }
-
-    function resizeImageFile(file, maxSize, quality) {
-      maxSize = maxSize || 1800;
-      quality = quality || 0.88;
-      return new Promise(function (resolve, reject) {
-        const reader = new FileReader();
-        reader.onload = function (event) {
-          const img = new Image();
-          img.onload = function () {
-            let width = img.width;
-            let height = img.height;
-            const ratio = Math.min(1, maxSize / Math.max(width, height));
-            width = Math.round(width * ratio);
-            height = Math.round(height * ratio);
-
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-
-            const mimeType = file.type && file.type.includes('png') ? 'image/png' : 'image/jpeg';
-            const dataUrl = canvas.toDataURL(mimeType, mimeType === 'image/jpeg' ? quality : undefined);
-            resolve({ dataUrl: dataUrl, mimeType: mimeType });
-          };
-          img.onerror = reject;
-          img.src = event.target.result;
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    }
-
-    async function handleDesignerImages(event) {
-      const files = Array.from((event && event.target && event.target.files) || []);
-      if (!files.length) return;
-
-      statusArte.textContent = 'Preparando imagens para o Designer...';
-
-      for (const file of files) {
-        if (!file.type || !file.type.startsWith('image/')) continue;
-
-        try {
-          const resized = await resizeImageFile(file, 1800, 0.88);
-          designerImages.push({
-            id: ++designerImageCounter,
-            name: file.name,
-            size: file.size,
-            mimeType: resized.mimeType || file.type || 'image/jpeg',
-            role: defaultRoleByName(file.name),
-            dataUrl: resized.dataUrl
-          });
-          renderDesignerImages();
-        } catch (error) {
-          statusArte.textContent = 'Não foi possível carregar uma das imagens: ' + file.name;
-        }
-      }
-
-      statusArte.textContent = designerImages.length + ' imagem(ns) de apoio pronta(s) para usar no Designer.';
-      event.target.value = '';
-    }
-
-    function changeDesignerImageRole(id, role) {
-      const item = designerImages.find(function (img) { return img.id === id; });
-      if (!item) return;
-      item.role = role;
-      statusArte.textContent = 'Função da imagem atualizada: ' + role + '.';
-    }
-
-    function removeDesignerImage(id) {
-      const index = designerImages.findIndex(function (img) { return img.id === id; });
-      if (index === -1) return;
-      designerImages.splice(index, 1);
-      renderDesignerImages();
-      statusArte.textContent = designerImages.length ? 'Imagem removida. Restam ' + designerImages.length + ' imagem(ns) de apoio.' : 'Todas as imagens de apoio foram removidas.';
-    }
-
-    function clearDesignerImages() {
-      designerImages.splice(0, designerImages.length);
-      renderDesignerImages();
-      statusArte.textContent = 'Imagens de apoio limpas.';
-    }
-
-    function montarResumoImagensPrompt() {
-      if (!designerImages.length) {
-        return 'Imagens de apoio: nenhuma imagem enviada.';
-      }
-
-      const linhas = designerImages.map(function (img, index) {
-        return '- Imagem ' + (index + 1) + ': ' + img.role + ' (' + img.name + '). Use esta imagem como referência visual relevante para a composição.';
-      });
-
-      return 'Imagens de apoio enviadas pelo usuário:
-' + linhas.join('
-');
-    }
-
-    function renderPromptPreview() {
-      if (!designerImages.length) {
-        previewBox.innerHTML = '<div class="preview-empty"><strong>ADB Mídia-Designer</strong><span>Preencha os dados, envie imagens de apoio e toque em “Montar prompt” ou “Gerar arte”.</span></div>';
-        return;
-      }
-
-      const thumbs = designerImages.slice(0, 4).map(function (img) {
-        return '<div class="upload-thumb" style="width:100%;height:160px;"><img src="' + img.dataUrl + '" alt="' + escapeHtml(img.name) + '"></div>';
-      }).join('');
-
-      previewBox.innerHTML = '<div style="width:100%;display:grid;gap:14px;">'
-        + '<div class="preview-empty"><strong>' + designerImages.length + ' imagem(ns) adicionada(s)</strong><span>Essas referências serão usadas junto com o prompt na criação da arte.</span></div>'
-        + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;">' + thumbs + '</div>'
-        + '</div>';
-    }
-
-    function montarPromptADB() {
-      const titulo = valorCampo('arteTitulo') || 'Evento da Igreja ADB Sampaio';
-      const subtitulo = valorCampo('arteSubtitulo');
-      const data = valorCampo('arteData');
-      const horario = valorCampo('arteHorario');
-      const local = valorCampo('arteLocal') || 'Igreja ADB Sampaio';
-      const tipo = valorCampo('arteTipo') || 'Culto';
-      const formato = valorCampo('arteFormato') || '3:4';
-      const observacoes = valorCampo('arteObservacoes');
-      const resumoImagens = montarResumoImagensPrompt();
-
-      return `Crie uma arte para evento da Igreja ADB Sampaio.
-
-Projeto: ADB Mídia-Designer
-Tipo de evento: ${tipo}
-Título principal: ${titulo}
-Subtítulo/frase: ${subtitulo || 'Sem subtítulo definido'}
-Data: ${data || 'Data a definir'}
-Horário: ${horario || 'Horário a definir'}
-Local: ${local}
-Formato: ${formato}
-Observações criativas: ${observacoes || 'Nenhuma observação extra informada'}
-
-Estilo visual obrigatório:
-- moderno, premium, editorial, worship e cinematográfico;
-- identidade de igreja cristã contemporânea;
-- cores principais: preto, off-white e marrom;
-- detalhes discretos em dourado queimado, bege, areia ou âmbar;
-- iluminação quente, atmosfera espiritual, profundidade e contraste elegante;
-- composição limpa, forte e acolhedora;
-- estética de culto, presença de Deus, comunhão e excelência;
-- visual próprio para Instagram da ADB Sampaio;
-- manter espaço de respiro para textos;
-- não usar emojis;
-- não usar estética infantil, cartoon, cyberpunk ou neon exagerado;
-- não distorcer logotipos;
-- não inventar informações além das fornecidas.
-
-Direção criativa:
-Crie uma base visual impactante e profissional para divulgação de evento da igreja. A imagem deve parecer premium, espiritual e institucional, com foco em adoração, presença de Deus e excelência visual. Priorize uma composição que permita aplicar título, data e horário com clareza.
-
-${resumoImagens}
-
-Se houver foto do preletor enviada, preserve a identidade visual da pessoa e use a imagem como elemento principal quando isso fizer sentido. Se houver logo da igreja enviada, utilize-a como referência oficial. Se houver imagens de referência, absorva estilo, clima e composição sem copiar de forma literal.`;
-    }
-
-    function montarPromptNaTela() {
-      const prompt = montarPromptADB();
-      promptArte.value = prompt;
-      renderPromptPreview();
-      statusArte.textContent = designerImages.length
-        ? 'Prompt montado com ' + designerImages.length + ' imagem(ns) de apoio no estilo do projeto ADB Mídia-Designer.'
-        : 'Prompt montado com o estilo do projeto ADB Mídia-Designer.';
-      return prompt;
-    }
-
-    async function copiarPromptADB() {
-      const prompt = montarPromptNaTela();
-      try {
-        await navigator.clipboard.writeText(prompt);
-        statusArte.textContent = 'Prompt copiado.';
-      } catch (error) {
-        promptArte.select();
-        statusArte.textContent = 'Prompt pronto. Selecione e copie manualmente.';
-      }
-    }
-
-    async function gerarArteADB() {
-      const prompt = montarPromptNaTela();
-
-      if (!API_ADB_MIDIA_DESIGNER) {
-        statusArte.textContent = 'A aba está pronta dentro do app. Para gerar imagem real, falta apenas configurar o link da API em API_ADB_MIDIA_DESIGNER. O upload de imagens já está preparado.';
-        renderPromptPreview();
-        return;
-      }
-
-      statusArte.textContent = 'Gerando arte...';
-      previewBox.innerHTML = '<div class="preview-empty"><strong>Gerando arte</strong><span>Aguarde alguns instantes...</span></div>';
-
-      const dados = {
-        titulo: valorCampo('arteTitulo') || 'Evento da Igreja ADB Sampaio',
-        subtitulo: valorCampo('arteSubtitulo'),
-        data: valorCampo('arteData'),
-        horario: valorCampo('arteHorario'),
-        local: valorCampo('arteLocal') || 'Igreja ADB Sampaio',
-        tipo_evento: valorCampo('arteTipo') || 'Culto',
-        formato: valorCampo('arteFormato') || '3:4',
-        observacoes: valorCampo('arteObservacoes'),
-        prompt: prompt,
-        reference_images: designerImages.map(function (img) {
-          return {
-            name: img.name,
-            role: img.role,
-            mime_type: img.mimeType,
-            data_base64: String(img.dataUrl).split(',')[1] || ''
-          };
-        })
-      };
-
-      try {
-        const resposta = await fetch(API_ADB_MIDIA_DESIGNER, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(dados)
-        });
-
-        const resultado = await resposta.json();
-        if (!resposta.ok) throw new Error(resultado.detail || 'Erro ao gerar arte.');
-
-        const imageBase64 = resultado.image_base64 || resultado.image || '';
-        const mimeType = resultado.mime_type || 'image/png';
-        const imageUrl = imageBase64.startsWith('data:') ? imageBase64 : ('data:' + mimeType + ';base64,' + imageBase64);
-
-        previewBox.innerHTML = '<div style="width:100%;display:grid;gap:14px;"><img src="' + imageUrl + '" alt="Arte gerada pelo ADB Mídia-Designer"><a class="btn" href="' + imageUrl + '" download="arte-adb-midia-designer.png" style="justify-content:center;text-decoration:none;">Baixar Arte</a></div>';
-        statusArte.textContent = 'Arte gerada com sucesso dentro do app. Você pode baixar ou gerar outra variação.';
-      } catch (error) {
-        renderPromptPreview();
-        statusArte.textContent = 'Erro: ' + error.message;
-      }
-    }
-
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Escape' && browserPage.classList.contains('is-open')) closeBrowser();
-      if (event.key === 'Escape' && designerPage.classList.contains('is-open')) closeDesigner();
     });
   </script>
 
@@ -2085,10 +1632,25 @@ Se houver foto do preletor enviada, preserve a identidade visual da pessoa e use
       let adamBusy = false;
       const history = [];
 
+
+      function limparRespostaAdam(text) {
+        return String(text || '')
+          .replace(/```[a-zA-Z0-9_-]*\n?/g, '')
+          .replace(/```/g, '')
+          .replace(/^\s{0,3}#{1,6}\s*/gm, '')
+          .replace(/\*\*(.*?)\*\*/g, '$1')
+          .replace(/__(.*?)__/g, '$1')
+          .replace(/`([^`]+)`/g, '$1')
+          .replace(/^\s*[-*_]{3,}\s*$/gm, '')
+          .replace(/^\s*[-*]\s+/gm, '• ')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
+      }
+
       function addMessage(text, type) {
         const bubble = document.createElement('div');
         bubble.className = 'adam-message ' + (type || 'bot');
-        bubble.textContent = text;
+        bubble.textContent = limparRespostaAdam(text);
         messages.appendChild(bubble);
         messages.scrollTop = messages.scrollHeight;
         return bubble;
@@ -2105,18 +1667,18 @@ Se houver foto do preletor enviada, preserve a identidade visual da pessoa e use
         const q = String(question || '').toLowerCase();
 
         if (q.includes('drive') || q.includes('documento') || q.includes('finance') || q.includes('entrada') || q.includes('saída') || q.includes('saida') || q.includes('planilha')) {
-          return 'O Adam está instalado no app. Para eu consultar documentos, planilhas, relatórios financeiros e movimentos de entrada/saída do Drive, configure na Vercel a Service Account do Google Drive com GOOGLE_SERVICE_ACCOUNT_EMAIL e GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY, e compartilhe as pastas da ADB com esse e-mail técnico.';
+          return '📂 Ainda preciso da conexão completa com o Drive para consultar documentos, planilhas e relatórios. Verifique as variáveis da Service Account na Vercel e se as pastas da ADB foram compartilhadas com o e-mail técnico.';
         }
 
         if (q.includes('preg') || q.includes('serm') || q.includes('mensagem')) {
-          return 'Para pregações, vou seguir a memória da ADB: Jesus no centro, Deus como protagonista, linguagem simples e conectiva, texto bíblico central, tópicos bem aplicados, referências bíblicas de apoio e frase final forte.';
+          return '📖 Para pregações, vou seguir a visão da ADB: Jesus no centro, Deus como protagonista, linguagem simples e conectiva, texto bíblico central, tópicos aplicados, referências bíblicas de apoio e uma frase final forte.';
         }
 
         if (q.includes('devoc')) {
-          return 'Para devocionais, vou seguir o padrão: tema e data, texto bíblico central, reflexão detalhada, aplicação prática, oração final encerrando com “Em nome de Jesus, Amém!”, palavra-chave e assinatura Pastor Bernardo.';
+          return '🙏 Para devocionais, vou seguir o padrão: tema e data, texto bíblico central, reflexão detalhada, aplicação prática, oração final encerrando com “Em nome de Jesus, Amém!”, palavra-chave e assinatura Pastor Bernardo.';
         }
 
-        return 'Estou pronto para responder como Adam. Se a API do Gemini ainda não estiver configurada, respondo em modo local. Depois de configurar GEMINI_API_KEY e o conector do Drive na Vercel, poderei conversar usando a memória bíblica e administrativa da ADB.';
+        return '👋 Estou pronto para ajudar. Posso apoiar em pregações, devocionais, secretaria, agenda, documentos e análises administrativas da ADB Sampaio.';
       }
 
       async function chamarAdamAPI(text) {
@@ -2136,7 +1698,7 @@ Se houver foto do preletor enviada, preserve a identidade visual da pessoa e use
           throw new Error(data.error || data.detail || 'Não foi possível conectar o Adam agora.');
         }
 
-        return data.answer || data.text || 'Recebi sua pergunta, mas não consegui montar uma resposta.';
+        return limparRespostaAdam(data.answer || data.text || 'Recebi sua pergunta, mas não consegui montar uma resposta.');
       }
 
       async function sendAdam(value) {
@@ -2152,10 +1714,10 @@ Se houver foto do preletor enviada, preserve a identidade visual da pessoa e use
 
         try {
           const answer = await chamarAdamAPI(text);
-          loading.textContent = answer;
+          loading.textContent = limparRespostaAdam(answer);
           history.push({ role: 'model', text: answer });
         } catch (error) {
-          loading.textContent = respostaLocal(text) + '\n\nDetalhe técnico: ' + error.message;
+          loading.textContent = limparRespostaAdam(respostaLocal(text) + '\n\nDetalhe técnico: ' + error.message);
         } finally {
           setInputState(false);
           input.focus();

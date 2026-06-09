@@ -22,6 +22,22 @@ function clip(text, max = 14000) {
   return value.length > max ? value.slice(0, max) + '\n...[conteúdo reduzido por limite de contexto]...' : value;
 }
 
+function cleanAdamAnswer(text) {
+  let value = String(text || '').replace(/\r/g, '');
+
+  // Remove blocos e marcações comuns de Markdown, mantendo o conteúdo legível.
+  value = value.replace(/```[a-zA-Z0-9_-]*\n?/g, '').replace(/```/g, '');
+  value = value.replace(/^\s{0,3}#{1,6}\s*/gm, '');
+  value = value.replace(/\*\*(.*?)\*\*/g, '$1');
+  value = value.replace(/__(.*?)__/g, '$1');
+  value = value.replace(/`([^`]+)`/g, '$1');
+  value = value.replace(/^\s*[-*_]{3,}\s*$/gm, '');
+  value = value.replace(/^\s*[-*]\s+/gm, '• ');
+  value = value.replace(/\n{3,}/g, '\n\n');
+
+  return value.trim();
+}
+
 function normalizeHistory(history) {
   if (!Array.isArray(history)) return [];
   return history.slice(-8).map((item) => {
@@ -55,6 +71,11 @@ IDENTIDADE DO ADAM NO APP:
 - Você serve ao Pastor Bernardo e à equipe da ADB Sampaio.
 - Responda em português do Brasil.
 - Seja pastoral, claro, organizado, objetivo e confiável.
+- Use uma linguagem visual limpa, humana e agradável.
+- Use emojis com moderação para organizar e trazer leveza, especialmente em títulos curtos, resumos e próximos passos.
+- Não use Markdown bruto: não use **asteriscos**, ###, ---, crases, blocos de código, barras, cercas ou símbolos decorativos desnecessários. Entregue texto limpo para aparecer dentro de um widget pequeno de chat.
+- Para listas, use preferencialmente bullets simples como “•” ou frases curtas em linhas separadas. Use no máximo 5 bullets por resposta, a não ser que o usuário peça detalhes.
+- Títulos devem ser escritos em texto normal, sem #, sem negrito markdown e sem caracteres especiais.
 - Para assuntos bíblicos, mantenha Jesus no centro, Deus como protagonista e aplicação prática.
 - Para assuntos administrativos, seja prático, cite limites dos dados e nunca invente números.
 - Quando usar dados do Drive/planilhas, diga “com base nos dados encontrados” e destaque se os dados parecem incompletos.
@@ -88,6 +109,9 @@ ${driveContext.context}
 
 INSTRUÇÃO:
 Responda usando a memória da ADB e, quando houver dados do Drive, use-os como base. Se a pergunta pedir análise financeira, organize em resumo, principais entradas, principais saídas, saldo/movimento quando possível, alertas e próximos passos. Não invente valores que não estejam no contexto.
+
+FORMATO DA RESPOSTA:
+Escreva de forma limpa, como conversa de WhatsApp/chat. Não use **, ###, ---, crases, blocos de código ou caracteres de Markdown. Use emojis com moderação para facilitar a leitura. Se precisar listar itens, use “•”. Evite respostas longas demais no primeiro retorno; seja claro e útil.
 `;
 
   let lastError = null;
@@ -119,7 +143,7 @@ Responda usando a memória da ADB e, quando houver dados do Drive, use-os como b
       }
       const parts = data?.candidates?.[0]?.content?.parts || [];
       const answer = parts.map((part) => part.text || '').join('\n').trim();
-      if (answer) return { answer, model };
+      if (answer) return { answer: cleanAdamAnswer(answer), model };
       lastError = new Error(`O modelo ${model} não retornou texto.`);
     } catch (error) {
       lastError = error;
