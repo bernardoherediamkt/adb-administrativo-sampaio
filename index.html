@@ -501,52 +501,179 @@
       });
     }
   </script>
-
   <script>
     (function () {
       const form = document.getElementById('adamForm');
       const input = document.getElementById('adamInput');
       const messages = document.getElementById('adamMessages');
-      const chips = document.querySelectorAll('[data-adam]');
-      if (!form || !input || !messages) return;
+      const chipsBox = document.querySelector('.adam-chips');
+      const sendButton = form ? form.querySelector('button[type="submit"]') : null;
+
+      if (!form || !input || !messages) {
+        console.warn('[Adam] Elementos do chat não encontrados.');
+        return;
+      }
+
       let adamBusy = false;
       const historyByChurch = {};
-      function history() { historyByChurch[currentChurchId] = historyByChurch[currentChurchId] || []; return historyByChurch[currentChurchId]; }
-      function limparRespostaAdam(text) {
-        return String(text || '').replace(/```[a-zA-Z0-9_-]*
-?/g, '').replace(/```/g, '').replace(/^\s{0,3}#{1,6}\s*/gm, '').replace(/\*\*(.*?)\*\*/g, '$1').replace(/__(.*?)__/g, '$1').replace(/`([^`]+)`/g, '$1').replace(/^\s*[-*_]{3,}\s*$/gm, '').replace(/^\s*[-*]\s+/gm, '• ').replace(/
-{3,}/g, '
 
-').trim();
+      function getCurrentChurchIdSafe() {
+        return (window.currentChurchId || (typeof currentChurchId !== 'undefined' ? currentChurchId : '') || localStorage.getItem('adb_selected_church') || 'sampaio').trim();
       }
-      function addMessage(text, type) { const bubble = document.createElement('div'); bubble.className = 'adam-message ' + (type || 'bot'); bubble.textContent = limparRespostaAdam(text); messages.appendChild(bubble); messages.scrollTop = messages.scrollHeight; return bubble; }
-      function setInputState(disabled) { adamBusy = disabled; input.disabled = disabled; const sendButton = form.querySelector('button[type="submit"]'); if (sendButton) sendButton.disabled = disabled; }
+
+      function getCurrentChurchSafe() {
+        try {
+          if (typeof currentChurch !== 'undefined' && currentChurch) return currentChurch;
+          const id = getCurrentChurchIdSafe();
+          if (typeof CHURCHES !== 'undefined' && CHURCHES[id]) return CHURCHES[id];
+        } catch {}
+        return { id: 'sampaio', name: 'ADB Sampaio' };
+      }
+
+      function history() {
+        const id = getCurrentChurchIdSafe();
+        historyByChurch[id] = historyByChurch[id] || [];
+        return historyByChurch[id];
+      }
+
+      function limparRespostaAdam(text) {
+        return String(text || '')
+          .replace(/```[a-zA-Z0-9_-]*\n?/g, '')
+          .replace(/```/g, '')
+          .replace(/^\s{0,3}#{1,6}\s*/gm, '')
+          .replace(/\*\*(.*?)\*\*/g, '$1')
+          .replace(/__(.*?)__/g, '$1')
+          .replace(/`([^`]+)`/g, '$1')
+          .replace(/^\s*[-*_]{3,}\s*$/gm, '')
+          .replace(/^\s*[-*]\s+/gm, '• ')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
+      }
+
+      function addMessage(text, type) {
+        const bubble = document.createElement('div');
+        bubble.className = 'adam-message ' + (type || 'bot');
+        bubble.textContent = limparRespostaAdam(text);
+        messages.appendChild(bubble);
+        messages.scrollTop = messages.scrollHeight;
+        return bubble;
+      }
+
+      function setInputState(disabled) {
+        adamBusy = disabled;
+        input.disabled = disabled;
+        if (sendButton) sendButton.disabled = disabled;
+        if (chipsBox) chipsBox.querySelectorAll('[data-adam]').forEach((btn) => { btn.disabled = disabled; });
+      }
+
       function respostaLocal(question) {
-        const name = currentChurch?.name || 'ADB';
+        const church = getCurrentChurchSafe();
+        const name = church.name || 'ADB';
         const q = String(question || '').toLowerCase();
-        if (q.includes('preg') || q.includes('serm') || q.includes('mensagem')) return `📖 Para pregações na ${name}, vou seguir a visão da ADB: Jesus no centro, Deus como protagonista, linguagem simples, referências bíblicas e aplicação prática.`;
-        if (q.includes('devoc')) return `🙏 Para devocionais da ${name}, sigo o padrão com tema, texto bíblico, reflexão, aplicação prática, oração e frase de efeito.`;
+
+        if (q.includes('preg') || q.includes('serm') || q.includes('mensagem')) {
+          return `📖 Para pregações na ${name}, vou seguir a visão da ADB: Jesus no centro, Deus como protagonista, linguagem simples, referências bíblicas e aplicação prática.`;
+        }
+
+        if (q.includes('devoc')) {
+          return `🙏 Para devocionais da ${name}, sigo o padrão com tema, texto bíblico, reflexão, aplicação prática, oração e frase de efeito.`;
+        }
+
         return `👋 Estou pronto para ajudar a ${name}. Posso apoiar em financeiro, secretaria, documentos, agenda, pregações e devocionais.`;
       }
+
+      function fetchComTimeout(url, options, timeoutMs) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+      }
+
       async function chamarAdamAPI(text) {
-        const resposta = await fetch('/api/adam-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text, churchId: currentChurchId, churchName: currentChurch?.name, history: history().slice(-8) }) });
-        let data = {}; try { data = await resposta.json(); } catch {}
-        if (!resposta.ok) throw new Error(data.error || data.detail || 'Não foi possível conectar o Adam agora.');
+        if (window.location.protocol === 'file:') {
+          throw new Error('O Adam só funciona na versão publicada na Vercel, porque ele precisa da rota /api/adam-chat.');
+        }
+
+        const church = getCurrentChurchSafe();
+        const churchId = getCurrentChurchIdSafe();
+
+        const resposta = await fetchComTimeout('/api/adam-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+          body: JSON.stringify({
+            message: text,
+            churchId,
+            churchName: church.name,
+            history: history().slice(-8)
+          })
+        }, 45000);
+
+        const raw = await resposta.text();
+        let data = {};
+        try { data = JSON.parse(raw || '{}'); } catch { data = { error: raw || 'Resposta inválida da API.' }; }
+
+        if (!resposta.ok) {
+          throw new Error(data.error || data.detail || `Erro HTTP ${resposta.status} no Adam.`);
+        }
+
         return limparRespostaAdam(data.answer || data.text || 'Recebi sua pergunta, mas não consegui montar uma resposta.');
       }
-      async function sendAdam(value) {
-        const text = String(value || '').trim(); if (!text || adamBusy) return;
-        addMessage(text, 'user'); history().push({ role: 'user', text }); input.value = ''; setInputState(true);
-        const loading = addMessage(`Adam está consultando os dados da ${currentChurch?.name || 'ADB'}...`, 'bot');
-        try { const answer = await chamarAdamAPI(text); loading.textContent = limparRespostaAdam(answer); history().push({ role: 'model', text: answer }); }
-        catch (error) { loading.textContent = limparRespostaAdam(respostaLocal(text) + '
 
-Detalhe técnico: ' + error.message); }
-        finally { setInputState(false); input.focus(); }
+      async function sendAdam(value) {
+        const text = String(value || '').trim();
+        if (!text || adamBusy) return;
+
+        const church = getCurrentChurchSafe();
+
+        addMessage(text, 'user');
+        history().push({ role: 'user', text });
+        input.value = '';
+        input.style.height = '';
+        setInputState(true);
+
+        const loading = addMessage(`Adam está consultando os dados da ${church.name || 'ADB'}...`, 'bot');
+
+        try {
+          const answer = await chamarAdamAPI(text);
+          loading.textContent = limparRespostaAdam(answer);
+          history().push({ role: 'model', text: answer });
+        } catch (error) {
+          loading.textContent = limparRespostaAdam(
+            respostaLocal(text) +
+            '\n\n⚠️ Não consegui completar a chamada do Adam agora.\nDetalhe técnico: ' +
+            (error && error.name === 'AbortError' ? 'tempo limite excedido na API.' : error.message)
+          );
+        } finally {
+          setInputState(false);
+          input.focus();
+        }
       }
-      form.addEventListener('submit', (event) => { event.preventDefault(); sendAdam(input.value); });
-      input.addEventListener('keydown', (event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendAdam(input.value); } });
-      chips.forEach((chip) => chip.addEventListener('click', () => sendAdam(chip.getAttribute('data-adam'))));
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        sendAdam(input.value);
+      });
+
+      input.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault();
+          event.stopPropagation();
+          sendAdam(input.value);
+        }
+      });
+
+      input.addEventListener('input', function () {
+        input.style.height = 'auto';
+        input.style.height = Math.min(input.scrollHeight, 140) + 'px';
+      });
+
+      document.addEventListener('click', function (event) {
+        const chip = event.target.closest('[data-adam]');
+        if (!chip) return;
+        event.preventDefault();
+        sendAdam(chip.getAttribute('data-adam') || chip.textContent || '');
+      });
+
+      window.adamEnviarMensagem = sendAdam;
     })();
   </script>
 </body>

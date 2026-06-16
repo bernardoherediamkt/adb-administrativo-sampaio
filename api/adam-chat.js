@@ -55,57 +55,42 @@ function normalizeHistory(history) {
   }).filter((item) => item.parts[0].text.trim());
 }
 
-function normalizeSearchText(text) {
-  return String(text || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
+function withTimeout(promise, timeoutMs, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(label || 'Tempo limite excedido.')), timeoutMs);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
-function shouldFetchDriveContext(message) {
-  if (process.env.ADAM_FORCE_DRIVE_CONTEXT === 'true') return true;
-
-  const text = normalizeSearchText(message);
-  const dataKeywords = [
-    'agenda', 'arquivo', 'balanco', 'batismo', 'caixa', 'compra', 'conta',
-    'despesa', 'dizimo', 'documento', 'drive', 'entrada', 'escala', 'evento',
-    'extrato', 'financeiro', 'foto', 'gasto', 'membro', 'membresia',
-    'ministerio', 'nota', 'orcamento', 'pagamento', 'pagar', 'planilha',
-    'receita', 'relatorio', 'saldo', 'sheets', 'saida', 'total', 'valor',
-    'venda'
-  ];
-
-  return dataKeywords.some((keyword) => text.includes(keyword));
-}
-
-function buildFallbackDriveContext(churchId, churchName) {
-  return {
-    connected: false,
-    church: { id: churchId, name: churchName },
-    context: 'A pergunta não exigiu consulta ao Google Drive/Sheets. Responda usando a memória fixa e, se o usuário pedir dados administrativos, financeiros ou arquivos, solicite uma consulta mais específica.'
-  };
+function shouldUseDriveContext(query) {
+  const q = String(query || '').toLowerCase();
+  return /(financeir|d[íi]zimo|oferta|entrada|sa[íi]da|gasto|despesa|saldo|caixa|relat[óo]rio|planilha|sheet|membro|cadastro|secretaria|documento|drive|pasta|comprovante|agenda|evento|country|pink|zion|cantina|insumo|compara|trimestre|semestre|m[eê]s|janeiro|fevereiro|mar[çc]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)/i.test(q);
 }
 
 async function fetchDriveContext(query, churchId) {
-  try {
-    const timeoutMs = Number(process.env.ADAM_DRIVE_CONTEXT_TIMEOUT_MS || 12000);
-    let timeoutId;
-    const timeout = new Promise((_, reject) => {
-      timeoutId = setTimeout(() => reject(new Error('Tempo limite ao consultar Google Drive/Sheets.')), timeoutMs);
-    });
+  if (!shouldUseDriveContext(query)) {
+    return {
+      connected: false,
+      skipped: true,
+      church: { id: churchId },
+      context: 'Consulta rápida: nenhuma leitura do Drive/Sheets foi necessária para esta mensagem. Responda usando a memória fixa e o contexto da igreja selecionada.'
+    };
+  }
 
-    try {
-      return await Promise.race([
-        buildDriveContext(query, { churchId }),
-        timeout
-      ]);
-    } finally {
-      clearTimeout(timeoutId);
-    }
+  const timeoutMs = Number(process.env.ADAM_DRIVE_TIMEOUT_MS || 12000);
+
+  try {
+    return await withTimeout(
+      buildDriveContext(query, { churchId }),
+      timeoutMs,
+      `A consulta ao Drive/Sheets passou de ${timeoutMs / 1000}s. Responda com honestidade e peça uma pergunta mais específica, sem inventar dados.`
+    );
   } catch (error) {
     return {
       connected: false,
-      context: 'Google Drive ainda não conectado via Service Account ou sem permissão nas pastas. Detalhe: ' + error.message
+      church: { id: churchId },
+      context: 'Não foi possível concluir a consulta ao Google Drive/Sheets dentro do tempo seguro. Detalhe técnico: ' + error.message + '\nRegra: se a pergunta pedir dados administrativos/financeiros, informe que a consulta não foi concluída e não invente valores.'
     };
   }
 }
@@ -151,13 +136,13 @@ async function callGemini({ systemPrompt, driveContext, message, history }) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY não configurada na Vercel.');
 
-  const requested = process.env.GEMINI_TEXT_MODEL || process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
+  const requested = process.env.GEMINI_TEXT_MODEL || process.env.GEMINI_MODEL || 'gemini-3.5-flash';
   const models = Array.from(new Set([
     requested,
+    'gemini-3.5-flash',
+    'gemini-3-flash',
     'gemini-3.1-flash-lite',
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash'
+    'gemini-2.5-flash'
   ].filter(Boolean)));
 
   const finalUserMessage = `
@@ -197,31 +182,26 @@ Texto limpo, direto e legível no widget. Sem Markdown bruto. Use emojis com mod
     };
 
     try {
+      const timeoutMs = Number(process.env.ADAM_GEMINI_TIMEOUT_MS || 25000);
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), Number(process.env.ADAM_GEMINI_TIMEOUT_MS || 22000));
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          signal: controller.signal
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          lastError = new Error((data.error && data.error.message) || `Erro Gemini ${response.status} no modelo ${model}`);
-          continue;
-        }
-        const parts = data?.candidates?.[0]?.content?.parts || [];
-        const answer = parts.map((part) => part.text || '').join('\n').trim();
-        if (answer) return { answer: cleanAdamAnswer(answer), model };
-        lastError = new Error(`O modelo ${model} não retornou texto.`);
-      } finally {
-        clearTimeout(timeout);
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      }).finally(() => clearTimeout(timer));
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        lastError = new Error((data.error && data.error.message) || `Erro Gemini ${response.status} no modelo ${model}`);
+        continue;
       }
+      const parts = data?.candidates?.[0]?.content?.parts || [];
+      const answer = parts.map((part) => part.text || '').join('\n').trim();
+      if (answer) return { answer: cleanAdamAnswer(answer), model };
+      lastError = new Error(`O modelo ${model} não retornou texto.`);
     } catch (error) {
-      lastError = error.name === 'AbortError'
-        ? new Error(`Tempo limite ao chamar o Gemini no modelo ${model}.`)
-        : error;
+      lastError = error;
     }
   }
   throw lastError || new Error('Não foi possível chamar o Gemini.');
@@ -229,6 +209,8 @@ Texto limpo, direto e legível no widget. Sem Markdown bruto. Use emojis com mod
 
 module.exports = async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
+  if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido.' });
 
   try {
@@ -238,9 +220,7 @@ module.exports = async function handler(req, res) {
 
     const churchId = String(body.churchId || 'sampaio').trim();
     const churchName = String(body.churchName || '').trim() || (churchId === 'saquarema' ? 'ADB Saquarema' : churchId === 'porto' ? 'ADB Porto da Roça' : 'ADB Sampaio');
-    const driveContext = shouldFetchDriveContext(message)
-      ? await fetchDriveContext(message, churchId)
-      : buildFallbackDriveContext(churchId, churchName);
+    const driveContext = await fetchDriveContext(message, churchId);
     const systemPrompt = buildSystemPrompt(churchName);
     const result = await callGemini({
       systemPrompt,

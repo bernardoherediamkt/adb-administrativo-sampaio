@@ -29,14 +29,20 @@ const CHURCHES = {
     name: 'ADB Saquarema',
     rootNames: ['ADB Saquarema'],
     envRoot: 'ADB_SAQUAREMA_ROOT_FOLDER_ID',
-    knownSheets: []
+    knownSheets: [
+      { name: 'Planilha de Membros - Saquarema', id: '1ZAzTXKlTEKsR8UsHkLenxrluZc2pAKvOXz8ylknOk9o', area: 'Secretaria', type: 'members' },
+      { name: 'Junho 2026 - Saquarema', id: '1ijOYDwj7FNf8L4L86kEUWkFJOPG-uyKqbr_LZiKKVUE', area: 'Controle Financeiro 2026', type: 'finance', month: 6, year: 2026 }
+    ]
   },
   porto: {
     id: 'porto',
     name: 'ADB Porto da Roça',
     rootNames: ['ADB Porto da Roça', 'ADB Porto da Roca'],
     envRoot: 'ADB_PORTO_ROOT_FOLDER_ID',
-    knownSheets: []
+    knownSheets: [
+      { name: 'Planilha de Membros - Porto da Roça', id: '1avnGceb36i1Ohh3d-j5WBPOJMqFjBboSOxLOmt1WVSc', area: 'Secretaria', type: 'members' },
+      { name: 'Junho 2026 - Porto da Roça', id: '1hnFlwQSK8hwHybqqVcIqxIKz1ofeAs_1Nooki-Wk8OI', area: 'Controle Financeiro 2026', type: 'finance', month: 6, year: 2026 }
+    ]
   }
 };
 
