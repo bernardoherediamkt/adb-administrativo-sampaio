@@ -97,11 +97,32 @@ function requestedYears(query) {
   const years = new Set();
   for (const match of q.matchAll(/20\d{2}/g)) years.add(Number(match[0]));
 
-  if (/ano passado|ano anterior|mes passado|mês passado|passado/.test(q)) years.add(CURRENT_YEAR - 1);
-  if (/esse ano|este ano|desse ano|deste ano|ano atual|atual/.test(q)) years.add(CURRENT_YEAR);
+  const hasMonth = requestedMonths(query).length > 0;
+  const asksCurrentPeriod = /(esse ano|este ano|desse ano|deste ano|ano atual|atual|esse mes|este mes|desse mes|deste mes|esse mês|este mês|desse mês|deste mês)/.test(q);
+  const asksPreviousYear = /(ano passado|ano anterior|mesmo periodo do ano passado|mesmo período do ano passado|em relacao ao ano passado|em relação ao ano passado)/.test(q);
+  const asksComparison = /(comparar|comparativo|compare|relacao|relação|em relacao|em relação)/.test(q);
 
-  if ((/comparar|comparativo|compare|relacao|relação/.test(q)) && years.size === 1) {
-    years.add(Array.from(years)[0] - 1);
+  if (asksCurrentPeriod) years.add(CURRENT_YEAR);
+  if (asksPreviousYear) years.add(CURRENT_YEAR - 1);
+
+  // Caso muito comum:
+  // “relatório desse mês de março em comparação com março do ano passado”
+  // precisa carregar março do ano atual e março do ano anterior.
+  if (hasMonth && asksPreviousYear && asksComparison) {
+    years.add(CURRENT_YEAR);
+    years.add(CURRENT_YEAR - 1);
+  }
+
+  // Se a pergunta menciona mês específico, é financeira e não cita ano,
+  // assume o ano atual. Ex.: “relatório de março”.
+  if (hasMonth && inferFinanceQuestion(query) && years.size === 0) {
+    years.add(CURRENT_YEAR);
+  }
+
+  if (asksComparison && years.size === 1) {
+    const onlyYear = Array.from(years)[0];
+    if (onlyYear === CURRENT_YEAR) years.add(CURRENT_YEAR - 1);
+    else years.add(onlyYear - 1);
   }
 
   return Array.from(years).filter(Boolean).sort();
@@ -377,10 +398,31 @@ function selectSpreadsheets({ sheets, query }) {
 
   const focused = Boolean(months.length || years.length);
   const limit = finance
-    ? Number(process.env.ADAM_SELECTED_FINANCE_SHEETS || (focused ? 8 : 16))
+    ? Number(process.env.ADAM_SELECTED_FINANCE_SHEETS || (focused ? 10 : 16))
     : members
       ? Number(process.env.ADAM_SELECTED_MEMBER_SHEETS || 8)
       : 8;
+
+  // Para comparações mês/ano, garantir que todos os anos pedidos entrem,
+  // mesmo que uma planilha tenha pontuação menor por nome/aba.
+  if (finance && months.length && years.length) {
+    const mustHave = scored.filter((s) => {
+      const text = sheetText(s);
+      const isFinance = s.type === 'finance' || /(financeir|faturamento|receita|entrada|saida|dizimo|oferta|caixa|controle|relatorio|2025|2026)/.test(text);
+      if (!isFinance) return false;
+
+      const yearMatch = years.some((y) => s.year === y || text.includes(String(y)));
+      const monthMatch = months.some((m) => s.month === m || MONTHS.filter(([, n]) => n === m).some(([mn]) => text.includes(normalizeText(mn))));
+
+      // Planilha anual: ano bate; mês pode estar em aba interna.
+      // Planilha mensal: mês bate; ano pode estar na pasta.
+      return yearMatch && (monthMatch || !s.month);
+    });
+
+    const merged = new Map();
+    for (const item of [...mustHave, ...filtered]) merged.set(item.id, item);
+    filtered = Array.from(merged.values()).sort((a, b) => b.score - a.score || String(b.modifiedTime || '').localeCompare(String(a.modifiedTime || '')));
+  }
 
   return filtered.slice(0, limit);
 }
@@ -553,8 +595,13 @@ async function buildSpreadsheetContext({ token, sheets, query }) {
 
   const sections = [];
 
+  const months = requestedMonths(query);
+  const years = requestedYears(query);
+  const requestedPeriodText = `PERÍODOS SOLICITADOS/INFERIDOS: anos=[${years.join(', ') || 'não especificado'}], meses=[${months.join(', ') || 'não especificado'}].`;
+
   sections.push(`FONTE OFICIAL DOS DADOS: GOOGLE SHEETS API.
 Observação: o Drive API foi usado apenas para localizar IDs/metadados das planilhas quando necessário. O conteúdo abaixo foi lido diretamente pela Google Sheets API.
+${requestedPeriodText}
 
 ÍNDICE DE PLANILHAS SELECIONADAS PARA ESTA PERGUNTA:
 ${selected.map((s, i) => `${i + 1}. ${s.name} | ID: ${s.id} | tipo: ${s.type || 'não classificado'} | ano: ${s.year || 'não identificado'} | mês: ${s.month || 'não identificado'} | score: ${s.score || 0} | caminho/pasta: ${s.pathHint || s.folderNames || ''}`).join('\n')}`);

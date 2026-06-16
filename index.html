@@ -296,7 +296,7 @@
     const adamSubtitle = document.getElementById('adamSubtitle');
     const adamIntro = document.getElementById('adamIntro');
 
-    let currentChurchId = localStorage.getItem('adb_selected_church') || '';
+    let currentChurchId = '';
     let currentChurch = null;
 
     function iconSvg(type) {
@@ -436,7 +436,7 @@
     function selectChurch(churchId) {
       const church = CHURCHES[churchId] || CHURCHES.sampaio;
       currentChurchId = church.id;
-      localStorage.setItem('adb_selected_church', church.id);
+      try { localStorage.removeItem('adb_selected_church'); } catch {}
       renderChurch(church);
       churchGate.hidden = true;
       mainMenu.hidden = false;
@@ -450,8 +450,28 @@
     }
 
     renderChurchGate();
-    if (currentChurchId && CHURCHES[currentChurchId]) selectChurch(currentChurchId);
+    try { localStorage.removeItem('adb_selected_church'); } catch {}
+    showChurchGate();
     changeChurchBtn.addEventListener('click', showChurchGate);
+
+    function resetToGateOnAppClose() {
+      currentChurchId = '';
+      currentChurch = null;
+      try { localStorage.removeItem('adb_selected_church'); } catch {}
+      if (mainMenu && churchGate) {
+        mainMenu.hidden = true;
+        churchGate.hidden = false;
+      }
+    }
+
+    window.addEventListener('pagehide', resetToGateOnAppClose);
+    window.addEventListener('beforeunload', resetToGateOnAppClose);
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') resetToGateOnAppClose();
+    });
+    window.addEventListener('pageshow', function () {
+      if (!currentChurchId) showChurchGate();
+    });
   </script>
 
   <script>

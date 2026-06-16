@@ -117,6 +117,13 @@ REGRAS DE PRECISÃO FINANCEIRA:
 - Se o usuário corrigir um valor, não invente outro valor; volte ao contexto, confira a linha e responda com cuidado.
 - Se não houver contexto suficiente para uma resposta exata, diga isso com honestidade e peça o mês, aba ou descrição que deve ser conferida.
 
+REGRA PARA COMPARATIVOS FINANCEIROS:
+- Quando o usuário pedir “esse mês”, “desse mês” ou “este mês” junto com um mês específico, entenda como o ano atual.
+- Quando pedir “em comparação com o ano passado”, carregue e compare o mesmo mês do ano atual e do ano anterior.
+- Se os dados de um dos períodos aparecerem no contexto da Sheets API, use-os; não diga que não tem acesso antes de conferir o índice de planilhas selecionadas e os dados brutos lidos.
+- Se o relatório pedir principais dizimistas e principais gastos, entregue no máximo 8 itens de cada, para a resposta não ficar incompleta.
+- Sempre finalize a resposta com um pequeno resumo de crescimento/queda e uma observação se algum item ficou pendente de conferência.
+
 MEMÓRIA COMPLETA DA ADB SAMPAIO:
 ${memoria}
 
@@ -157,6 +164,7 @@ Não forneça links de planilha, a menos que o usuário peça.
 
 FORMATO:
 Texto limpo, direto e legível no widget. Sem Markdown bruto. Use emojis com moderação e bullets simples.
+Para relatórios financeiros, seja completo, mas objetivo: resumo, comparativo, principais dizimistas, principais gastos e conclusão. Não deixe a mensagem terminar no meio de uma frase.
 Tratamento ao usuário: genérico. Não chame de Pastor Bernardo nem de pastor, a menos que a pessoa se identifique assim nesta conversa.
 `;
 
@@ -172,7 +180,7 @@ Tratamento ao usuário: genérico. Não chame de Pastor Bernardo nem de pastor, 
       generationConfig: {
         temperature: 0.18,
         topP: 0.85,
-        maxOutputTokens: 5200
+        maxOutputTokens: 9000
       }
     };
 
@@ -187,10 +195,21 @@ Tratamento ao usuário: genérico. Não chame de Pastor Bernardo nem de pastor, 
         lastError = new Error((data.error && data.error.message) || `Erro Gemini ${response.status} no modelo ${model}`);
         continue;
       }
-      const parts = data?.candidates?.[0]?.content?.parts || [];
+      const candidate = data?.candidates?.[0] || {};
+      const parts = candidate?.content?.parts || [];
       const answer = parts.map((part) => part.text || '').join('\n').trim();
-      if (answer) return { answer: cleanAdamAnswer(answer), model };
-      lastError = new Error(`O modelo ${model} não retornou texto.`);
+      const finishReason = candidate.finishReason || '';
+      if (answer) {
+        const cleaned = cleanAdamAnswer(answer);
+        if (finishReason === 'MAX_TOKENS') {
+          return {
+            answer: cleaned + '\n\nObservação técnica: a resposta chegou ao limite máximo de tamanho. Peça “continue” para eu completar a parte restante.',
+            model
+          };
+        }
+        return { answer: cleaned, model };
+      }
+      lastError = new Error(`O modelo ${model} não retornou texto. Motivo: ${finishReason || 'não informado'}.`);
     } catch (error) {
       lastError = error;
     }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'adb-administrativo-sheetsapi-corrigido-v9';
+const CACHE_NAME = 'adb-administrativo-tela-inicial-corrigida-v11';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (event) => {

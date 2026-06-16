@@ -1,0 +1,16 @@
+ADB Administrativo Multi-Igrejas - Adam Comparativo Completo
+
+Correções desta versão:
+- Corrigida a interpretação de “desse mês de março em comparação com março do ano passado”.
+  Agora o Adam infere: março do ano atual + março do ano anterior.
+- O contexto da Sheets API informa explicitamente os períodos inferidos.
+- A seleção de planilhas garante a inclusão dos anos pedidos em comparativos financeiros.
+- A resposta do Gemini aumentou o limite de saída para reduzir mensagens cortadas.
+- Se o modelo ainda atingir limite de saída, o Adam avisa para pedir “continue”.
+- O prompt agora orienta relatórios financeiros com:
+  resumo, comparativo, principais dizimistas, principais gastos e conclusão.
+- Mantida a regra: dados de planilha vêm da Google Sheets API; Drive API apenas localiza IDs/metadados.
+- Mantida a regra: tratamento genérico ao usuário, sem presumir que é Pastor Bernardo.
+
+Teste recomendado:
+Adam, me dê o relatório desse mês de março em comparação com março do ano passado. Me diga os principais dizimistas e os principais gastos.
