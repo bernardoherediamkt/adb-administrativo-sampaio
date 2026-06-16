@@ -1,0 +1,17 @@
+ADB Administrativo Multi-Igrejas - Adam Corrigido
+
+Correções desta versão:
+- Frontend do Adam refeito com envio por Enter.
+- Shift + Enter continua permitindo quebra de linha.
+- Botões rápidos abaixo do Adam voltaram a funcionar por delegação de clique.
+- Adam sempre envia churchId e churchName da igreja selecionada.
+- /api/adam-chat com Cache-Control no-store, timeout de Drive/Sheets e timeout de Gemini.
+- /api/health com Cache-Control no-store.
+- service-worker.js não intercepta mais /api/* e usa novo cache para forçar atualização.
+- Saquarema e Porto da Roça também têm planilhas fixas no contexto do Adam.
+
+Depois de subir no GitHub:
+1. Faça commit.
+2. Faça Redeploy na Vercel.
+3. Abra /api/health.
+4. Teste o Adam dentro do app com Enter e com os botões rápidos.
