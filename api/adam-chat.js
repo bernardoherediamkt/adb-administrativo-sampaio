@@ -57,7 +57,20 @@ function normalizeHistory(history) {
 
 async function fetchDriveContext(query, churchId) {
   try {
-    return await buildDriveContext(query, { churchId });
+    const timeoutMs = Number(process.env.ADAM_DRIVE_CONTEXT_TIMEOUT_MS || 12000);
+    let timeoutId;
+    const timeout = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('Tempo limite ao consultar Google Drive/Sheets.')), timeoutMs);
+    });
+
+    try {
+      return await Promise.race([
+        buildDriveContext(query, { churchId }),
+        timeout
+      ]);
+    } finally {
+      clearTimeout(timeoutId);
+    }
   } catch (error) {
     return {
       connected: false,
@@ -107,13 +120,13 @@ async function callGemini({ systemPrompt, driveContext, message, history }) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY não configurada na Vercel.');
 
-  const requested = process.env.GEMINI_TEXT_MODEL || process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+  const requested = process.env.GEMINI_TEXT_MODEL || process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
   const models = Array.from(new Set([
     requested,
-    'gemini-3.5-flash',
-    'gemini-3-flash',
     'gemini-3.1-flash-lite',
-    'gemini-2.5-flash'
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash'
   ].filter(Boolean)));
 
   const finalUserMessage = `
@@ -153,22 +166,31 @@ Texto limpo, direto e legível no widget. Sem Markdown bruto. Use emojis com mod
     };
 
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        lastError = new Error((data.error && data.error.message) || `Erro Gemini ${response.status} no modelo ${model}`);
-        continue;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), Number(process.env.ADAM_GEMINI_TIMEOUT_MS || 22000));
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          lastError = new Error((data.error && data.error.message) || `Erro Gemini ${response.status} no modelo ${model}`);
+          continue;
+        }
+        const parts = data?.candidates?.[0]?.content?.parts || [];
+        const answer = parts.map((part) => part.text || '').join('\n').trim();
+        if (answer) return { answer: cleanAdamAnswer(answer), model };
+        lastError = new Error(`O modelo ${model} não retornou texto.`);
+      } finally {
+        clearTimeout(timeout);
       }
-      const parts = data?.candidates?.[0]?.content?.parts || [];
-      const answer = parts.map((part) => part.text || '').join('\n').trim();
-      if (answer) return { answer: cleanAdamAnswer(answer), model };
-      lastError = new Error(`O modelo ${model} não retornou texto.`);
     } catch (error) {
-      lastError = error;
+      lastError = error.name === 'AbortError'
+        ? new Error(`Tempo limite ao chamar o Gemini no modelo ${model}.`)
+        : error;
     }
   }
   throw lastError || new Error('Não foi possível chamar o Gemini.');
