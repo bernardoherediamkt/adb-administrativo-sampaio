@@ -55,6 +55,37 @@ function normalizeHistory(history) {
   }).filter((item) => item.parts[0].text.trim());
 }
 
+function normalizeSearchText(text) {
+  return String(text || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function shouldFetchDriveContext(message) {
+  if (process.env.ADAM_FORCE_DRIVE_CONTEXT === 'true') return true;
+
+  const text = normalizeSearchText(message);
+  const dataKeywords = [
+    'agenda', 'arquivo', 'balanco', 'batismo', 'caixa', 'compra', 'conta',
+    'despesa', 'dizimo', 'documento', 'drive', 'entrada', 'escala', 'evento',
+    'extrato', 'financeiro', 'foto', 'gasto', 'membro', 'membresia',
+    'ministerio', 'nota', 'orcamento', 'pagamento', 'pagar', 'planilha',
+    'receita', 'relatorio', 'saldo', 'sheets', 'saida', 'total', 'valor',
+    'venda'
+  ];
+
+  return dataKeywords.some((keyword) => text.includes(keyword));
+}
+
+function buildFallbackDriveContext(churchId, churchName) {
+  return {
+    connected: false,
+    church: { id: churchId, name: churchName },
+    context: 'A pergunta não exigiu consulta ao Google Drive/Sheets. Responda usando a memória fixa e, se o usuário pedir dados administrativos, financeiros ou arquivos, solicite uma consulta mais específica.'
+  };
+}
+
 async function fetchDriveContext(query, churchId) {
   try {
     const timeoutMs = Number(process.env.ADAM_DRIVE_CONTEXT_TIMEOUT_MS || 12000);
@@ -207,7 +238,9 @@ module.exports = async function handler(req, res) {
 
     const churchId = String(body.churchId || 'sampaio').trim();
     const churchName = String(body.churchName || '').trim() || (churchId === 'saquarema' ? 'ADB Saquarema' : churchId === 'porto' ? 'ADB Porto da Roça' : 'ADB Sampaio');
-    const driveContext = await fetchDriveContext(message, churchId);
+    const driveContext = shouldFetchDriveContext(message)
+      ? await fetchDriveContext(message, churchId)
+      : buildFallbackDriveContext(churchId, churchName);
     const systemPrompt = buildSystemPrompt(churchName);
     const result = await callGemini({
       systemPrompt,
