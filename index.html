@@ -296,7 +296,7 @@
     const adamSubtitle = document.getElementById('adamSubtitle');
     const adamIntro = document.getElementById('adamIntro');
 
-    let currentChurchId = localStorage.getItem('adb_selected_church') || '';
+    let currentChurchId = '';
     let currentChurch = null;
 
     function iconSvg(type) {
@@ -436,7 +436,7 @@
     function selectChurch(churchId) {
       const church = CHURCHES[churchId] || CHURCHES.sampaio;
       currentChurchId = church.id;
-      localStorage.setItem('adb_selected_church', church.id);
+      try { localStorage.removeItem('adb_selected_church'); } catch {}
       renderChurch(church);
       churchGate.hidden = true;
       mainMenu.hidden = false;
@@ -450,7 +450,8 @@
     }
 
     renderChurchGate();
-    if (currentChurchId && CHURCHES[currentChurchId]) selectChurch(currentChurchId);
+    try { localStorage.removeItem('adb_selected_church'); } catch {}
+    showChurchGate();
     changeChurchBtn.addEventListener('click', showChurchGate);
   </script>
 
@@ -518,7 +519,7 @@
       const historyByChurch = {};
 
       function getCurrentChurchIdSafe() {
-        return (window.currentChurchId || (typeof currentChurchId !== 'undefined' ? currentChurchId : '') || localStorage.getItem('adb_selected_church') || 'sampaio').trim();
+        return (window.currentChurchId || (typeof currentChurchId !== 'undefined' ? currentChurchId : '') || 'sampaio').trim();
       }
 
       function getCurrentChurchSafe() {
@@ -596,7 +597,7 @@
         const church = getCurrentChurchSafe();
         const churchId = getCurrentChurchIdSafe();
 
-        const resposta = await fetchComTimeout('/api/adam-chat', {
+        const resposta = await fetch('/api/adam-chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
           body: JSON.stringify({
@@ -605,7 +606,7 @@
             churchName: church.name,
             history: history().slice(-8)
           })
-        }, 45000);
+        });
 
         const raw = await resposta.text();
         let data = {};
@@ -640,7 +641,7 @@
           loading.textContent = limparRespostaAdam(
             respostaLocal(text) +
             '\n\n⚠️ Não consegui completar a chamada do Adam agora.\nDetalhe técnico: ' +
-            (error && error.name === 'AbortError' ? 'tempo limite excedido na API.' : error.message)
+            (error && error.name === 'AbortError' ? 'a conexão foi interrompida antes de concluir.' : error.message)
           );
         } finally {
           setInputState(false);

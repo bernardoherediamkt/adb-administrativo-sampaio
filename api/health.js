@@ -10,6 +10,11 @@ module.exports = async function handler(req, res) {
     geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
     geminiTextModel: process.env.GEMINI_TEXT_MODEL || process.env.GEMINI_MODEL || 'gemini-3.5-flash',
     driveConnectorConfigured: Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY),
-    driveMethod: 'service_account'
+    driveMethod: 'service_account',
+    rootFoldersConfigured: {
+      sampaio: Boolean(process.env.ADB_SAMPAIO_ROOT_FOLDER_ID),
+      saquarema: Boolean(process.env.ADB_SAQUAREMA_ROOT_FOLDER_ID),
+      porto: Boolean(process.env.ADB_PORTO_ROOT_FOLDER_ID)
+    }
   });
 };

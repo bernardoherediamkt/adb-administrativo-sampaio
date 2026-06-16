@@ -55,14 +55,6 @@ function normalizeHistory(history) {
   }).filter((item) => item.parts[0].text.trim());
 }
 
-function withTimeout(promise, timeoutMs, label) {
-  let timer;
-  const timeout = new Promise((_, reject) => {
-    timer = setTimeout(() => reject(new Error(label || 'Tempo limite excedido.')), timeoutMs);
-  });
-  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
-}
-
 function shouldUseDriveContext(query) {
   const q = String(query || '').toLowerCase();
   return /(financeir|d[íi]zimo|oferta|entrada|sa[íi]da|gasto|despesa|saldo|caixa|relat[óo]rio|planilha|sheet|membro|cadastro|secretaria|documento|drive|pasta|comprovante|agenda|evento|country|pink|zion|cantina|insumo|compara|trimestre|semestre|m[eê]s|janeiro|fevereiro|mar[çc]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)/i.test(q);
@@ -78,19 +70,14 @@ async function fetchDriveContext(query, churchId) {
     };
   }
 
-  const timeoutMs = Number(process.env.ADAM_DRIVE_TIMEOUT_MS || 12000);
-
   try {
-    return await withTimeout(
-      buildDriveContext(query, { churchId }),
-      timeoutMs,
-      `A consulta ao Drive/Sheets passou de ${timeoutMs / 1000}s. Responda com honestidade e peça uma pergunta mais específica, sem inventar dados.`
-    );
+    return await buildDriveContext(query, { churchId });
   } catch (error) {
     return {
       connected: false,
       church: { id: churchId },
-      context: 'Não foi possível concluir a consulta ao Google Drive/Sheets dentro do tempo seguro. Detalhe técnico: ' + error.message + '\nRegra: se a pergunta pedir dados administrativos/financeiros, informe que a consulta não foi concluída e não invente valores.'
+      context: 'Não foi possível concluir a consulta ao Google Drive/Sheets. Detalhe técnico: ' + error.message + '
+Regra: se a pergunta pedir dados administrativos/financeiros, informe que a consulta não foi concluída e não invente valores.'
     };
   }
 }
@@ -182,15 +169,11 @@ Texto limpo, direto e legível no widget. Sem Markdown bruto. Use emojis com mod
     };
 
     try {
-      const timeoutMs = Number(process.env.ADAM_GEMINI_TIMEOUT_MS || 25000);
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), timeoutMs);
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        signal: controller.signal
-      }).finally(() => clearTimeout(timer));
+        body: JSON.stringify(payload)
+      });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         lastError = new Error((data.error && data.error.message) || `Erro Gemini ${response.status} no modelo ${model}`);

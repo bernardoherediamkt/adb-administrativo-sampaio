@@ -1,0 +1,15 @@
+ADB Administrativo Multi-Igrejas - Tela inicial sempre ao abrir
+
+Alterações desta versão:
+- O app não salva mais a igreja selecionada no localStorage.
+- Ao abrir/reabrir o app, ele volta sempre para a tela inicial de escolha da igreja.
+- Ao selecionar uma igreja, o Adam continua recebendo churchId e churchName corretamente.
+- As variáveis ADB_SAMPAIO_ROOT_FOLDER_ID, ADB_SAQUAREMA_ROOT_FOLDER_ID e ADB_PORTO_ROOT_FOLDER_ID já são usadas pelo backend para acelerar a consulta do Adam.
+- /api/health agora mostra se essas três variáveis foram configuradas.
+- Cache do service worker atualizado para forçar a nova versão.
+
+Depois de subir no GitHub:
+1. Faça commit.
+2. Faça redeploy na Vercel.
+3. Abra /api/health e confira rootFoldersConfigured.
+4. Abra o app, selecione uma igreja, feche/reabra e confira se voltou para a tela inicial.

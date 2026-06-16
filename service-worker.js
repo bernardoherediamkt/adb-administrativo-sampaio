@@ -1,4 +1,4 @@
-const CACHE_NAME = 'adb-administrativo-multi-igrejas-adam-fix-v5';
+const CACHE_NAME = 'adb-administrativo-multi-igrejas-tela-inicial-v7';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (event) => {
