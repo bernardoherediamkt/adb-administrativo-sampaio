@@ -55,9 +55,9 @@ function normalizeHistory(history) {
   }).filter((item) => item.parts[0].text.trim());
 }
 
-async function fetchDriveContext(query) {
+async function fetchDriveContext(query, churchId) {
   try {
-    return await buildDriveContext(query);
+    return await buildDriveContext(query, { churchId });
   } catch (error) {
     return {
       connected: false,
@@ -66,7 +66,7 @@ async function fetchDriveContext(query) {
   }
 }
 
-function buildSystemPrompt() {
+function buildSystemPrompt(churchName = 'ADB Sampaio') {
   const base = readMemoryFile('memoria_adam/ADAM_SYSTEM_PROMPT_ADB_SAMPAIO.txt', 'Você é Adam, Assistente Virtual da ADB Sampaio.');
   const memoria = readMemoryFile('memoria_adam/ADAM_MEMORIA_COMPLETA_ADB_SAMPAIO.md', '');
 
@@ -74,8 +74,10 @@ function buildSystemPrompt() {
 ${base}
 
 IDENTIDADE DO ADAM NO APP:
-- Seu nome é Adam, Assistente Virtual da ADB Sampaio.
-- Você serve ao Pastor Bernardo e à equipe da ADB Sampaio.
+- Seu nome é Adam, Assistente Virtual da ADB Administrativo Multi-Igrejas.
+- Você serve ao Pastor Bernardo e à equipe da ADB.
+- A igreja atualmente selecionada no app é: ${churchName}.
+- Responda SOMENTE no contexto da igreja selecionada. Não misture dados de outras igrejas.
 - Responda em português do Brasil.
 - Seja pastoral, claro, organizado, objetivo e confiável.
 - Use uma linguagem humana, simples e agradável.
@@ -123,7 +125,7 @@ ${driveContext.context}
 
 INSTRUÇÃO PARA ESTA RESPOSTA:
 Use a memória fixa da ADB para tom, estilo, visão bíblica e pastoral.
-Use o contexto do Drive/Planilhas para dados administrativos e financeiros.
+Use o contexto do Drive/Planilhas SOMENTE da igreja selecionada para dados administrativos e financeiros.
 Para planilhas, use sempre os dados da seção “DADOS DE PLANILHAS LIDOS DIRETAMENTE PELA GOOGLE SHEETS API”. Essa seção é a fonte oficial dos valores.
 Para financeiro, você pode interpretar as tabelas com inteligência, mas deve obedecer a precisão: só afirme e some valores visíveis no contexto da Sheets API. Nunca chute, nunca complete lacunas e nunca invente valores.
 Se listar despesas, mostre os itens encontrados com mês, aba/linha quando disponível, descrição e valor.
@@ -181,8 +183,10 @@ module.exports = async function handler(req, res) {
     const message = String(body.message || '').trim();
     if (!message) return res.status(400).json({ error: 'Mensagem vazia.' });
 
-    const driveContext = await fetchDriveContext(message);
-    const systemPrompt = buildSystemPrompt();
+    const churchId = String(body.churchId || 'sampaio').trim();
+    const churchName = String(body.churchName || '').trim() || (churchId === 'saquarema' ? 'ADB Saquarema' : churchId === 'porto' ? 'ADB Porto da Roça' : 'ADB Sampaio');
+    const driveContext = await fetchDriveContext(message, churchId);
+    const systemPrompt = buildSystemPrompt(churchName);
     const result = await callGemini({
       systemPrompt,
       driveContext,
@@ -193,7 +197,8 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       answer: result.answer,
       model: result.model,
-      driveConnected: driveContext.connected
+      driveConnected: driveContext.connected,
+      church: driveContext.church || { id: churchId, name: churchName }
     });
   } catch (error) {
     return res.status(500).json({ error: error.message || 'Erro interno no Adam.' });
