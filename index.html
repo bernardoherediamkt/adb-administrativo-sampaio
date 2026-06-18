@@ -2,8 +2,14 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
   <meta name="theme-color" content="#674932" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="ADB Admin" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <title>ADB Administrativo • Multi-Igrejas</title>
   <style>
     :root {
@@ -118,6 +124,50 @@
     .loading-layer { position:absolute; inset:0; display:none; place-items:center; background: rgba(243,240,231,.72); color: var(--accent-dark); font-weight:900; z-index:2; }
     .loading-layer.is-visible { display:grid; }
 
+
+
+    /* Ajustes específicos para a versão salva no celular */
+    .church-card { color: var(--text); -webkit-appearance:none; appearance:none; }
+    .church-card h2 { color: var(--text) !important; }
+    .browser-shell { --sheet-scale: 1; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-x pan-y pinch-zoom; }
+    .browser-zoom-surface { width:100%; height:100%; min-width:100%; min-height:100%; transform-origin: top left; }
+    .browser-frame { transform-origin: top left; }
+    .browser-page.is-sheet .browser-zoom-surface { width: calc(100% * var(--sheet-scale)); height: calc(100% * var(--sheet-scale)); }
+    .browser-page.is-sheet .browser-frame { width: calc(100% / var(--sheet-scale)); height: calc(100% / var(--sheet-scale)); transform: scale(var(--sheet-scale)); }
+
+    @media (max-width: 760px) {
+      button, input, textarea { font: inherit; }
+      .church-card, .church-card h2 { color: var(--text) !important; }
+      .church-card h2 { font-size: 28px; letter-spacing: -.055em; }
+
+      /* O cabeçalho interno deixa de ser fixo e fica compacto apenas no topo do painel. */
+      .app-header {
+        position: relative;
+        top: auto;
+        z-index: 1;
+        flex-direction: row;
+        align-items: center;
+        text-align: left;
+        gap: 10px;
+        padding: 10px 12px;
+        margin: 0 0 14px;
+        border-radius: 18px;
+        box-shadow: 0 10px 24px rgba(40, 33, 24, .06);
+      }
+      .identity { flex-direction: row; gap: 10px; flex: 1; }
+      .logo-wrap { width: 46px; height: 46px; padding: 4px; flex: 0 0 46px; }
+      .eyebrow { display: none; }
+      .identity h1 { font-size: 21px; line-height: 1; letter-spacing: -.055em; }
+      .church-pill { margin-left: auto; padding: 4px 4px 4px 10px; border-radius: 15px; gap: 7px; flex-wrap: nowrap; }
+      .church-pill strong { font-size: 13px; white-space: nowrap; }
+      .switch-btn { padding: 8px 10px; border-radius: 12px; font-size: 13px; }
+
+      .browser-bar { height: 64px; flex-basis: 64px; padding: 10px 14px; }
+      .browser-back, .browser-action { width:44px; height:44px; border-radius:14px; font-size:20px; }
+      .browser-page.is-sheet .browser-subtitle::after { content: ' • pinça para zoom'; }
+      .browser-page.is-sheet .browser-shell { touch-action: pan-x pan-y pinch-zoom; }
+    }
+
     @media (max-width: 980px) { .church-grid, .cards { grid-template-columns: 1fr; } }
     @media (max-width: 760px) {
       .church-gate, .app { width:min(100vw - 18px, 1180px); padding: 14px 0 28px; }
@@ -132,6 +182,30 @@
       .calendar-box iframe { min-height:430px; }
       .month-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
     }
+    /* tela-inicial-mobile-final-override */
+
+    @media (max-width: 760px) {
+      .app-header {
+        position: relative !important;
+        top: auto !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        text-align: left !important;
+        gap: 10px !important;
+        padding: 10px 12px !important;
+        margin: 0 0 14px !important;
+        border-radius: 18px !important;
+      }
+      .identity { flex-direction: row !important; gap: 10px !important; }
+      .logo-wrap { width:46px !important; height:46px !important; padding:4px !important; flex:0 0 46px !important; }
+      .eyebrow { display:none !important; }
+      .identity h1 { font-size:21px !important; line-height:1 !important; }
+      .church-pill { margin-left:auto !important; padding:4px 4px 4px 10px !important; border-radius:15px !important; flex-wrap:nowrap !important; }
+      .church-pill strong { font-size:13px !important; white-space:nowrap !important; }
+      .switch-btn { padding:8px 10px !important; border-radius:12px !important; font-size:13px !important; }
+      .church-card, .church-card h2 { color: var(--text) !important; }
+    }
+
   </style>
 </head>
 <body>
@@ -230,7 +304,9 @@
     </div>
     <div class="browser-shell" id="browserShell">
       <div class="loading-layer" id="loadingLayer">Carregando...</div>
-      <iframe class="browser-frame" id="browserFrame" title="Navegador interno"></iframe>
+      <div class="browser-zoom-surface" id="browserZoomSurface">
+        <iframe class="browser-frame" id="browserFrame" title="Navegador interno" allow="fullscreen"></iframe>
+      </div>
     </div>
   </section>
 
@@ -482,18 +558,41 @@
     const browserTitle = document.getElementById('browserTitle');
     const browserSubtitle = document.getElementById('browserSubtitle');
     const browserFrame = document.getElementById('browserFrame');
+    const browserShell = document.getElementById('browserShell');
+    const browserZoomSurface = document.getElementById('browserZoomSurface');
     const loadingLayer = document.getElementById('loadingLayer');
     let currentUrl = '';
+    let sheetZoom = 1;
+    let pinchStartDistance = 0;
+    let pinchStartZoom = 1;
 
     function isSpreadsheetUrl(url) { return /docs\.google\.com\/spreadsheets/.test(url || ''); }
     function prepareGoogleSheetUrl(url) {
       if (!isSpreadsheetUrl(url)) return url;
       try { const parsed = new URL(url); if (!parsed.searchParams.has('rm')) parsed.searchParams.set('rm', 'minimal'); return parsed.toString(); } catch { return url; }
     }
+    function isMobileLayout() { return window.matchMedia && window.matchMedia('(max-width: 760px)').matches; }
+    function clampZoom(value) { return Math.max(0.85, Math.min(3, Number(value) || 1)); }
+    function applySheetZoom(value) {
+      sheetZoom = clampZoom(value);
+      if (browserShell) browserShell.style.setProperty('--sheet-scale', String(sheetZoom));
+    }
+    function resetSheetZoom(url) {
+      applySheetZoom(isSpreadsheetUrl(url) && isMobileLayout() ? 1.12 : 1);
+      if (browserShell) { browserShell.scrollLeft = 0; browserShell.scrollTop = 0; }
+    }
+    function distanceBetweenTouches(touches) {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
     function openBrowser(url, title, subtitle) {
       currentUrl = prepareGoogleSheetUrl(url);
+      const sheetMode = isSpreadsheetUrl(url);
+      browserPage.classList.toggle('is-sheet', sheetMode);
+      resetSheetZoom(currentUrl);
       browserTitle.textContent = title || 'ADB Administrativo';
-      browserSubtitle.textContent = isSpreadsheetUrl(url) ? 'Planilha Google' : (subtitle || 'Abrindo dentro do app');
+      browserSubtitle.textContent = sheetMode ? 'Planilha Google' : (subtitle || 'Abrindo dentro do app');
       loadingLayer.classList.add('is-visible');
       browserPage.classList.add('is-open');
       browserPage.setAttribute('aria-hidden', 'false');
@@ -503,10 +602,28 @@
     }
     function closeBrowser() {
       browserFrame.src = 'about:blank'; currentUrl = '';
-      browserPage.classList.remove('is-open'); browserPage.setAttribute('aria-hidden', 'true');
+      browserPage.classList.remove('is-open', 'is-sheet'); browserPage.setAttribute('aria-hidden', 'true');
+      resetSheetZoom('');
       document.body.style.overflow = ''; loadingLayer.classList.remove('is-visible');
     }
     function reloadBrowser() { if (!currentUrl) return; loadingLayer.classList.add('is-visible'); browserFrame.src = 'about:blank'; setTimeout(() => browserFrame.src = currentUrl, 50); }
+    if (browserShell) {
+      browserShell.addEventListener('touchstart', function (event) {
+        if (!browserPage.classList.contains('is-sheet') || event.touches.length !== 2) return;
+        pinchStartDistance = distanceBetweenTouches(event.touches);
+        pinchStartZoom = sheetZoom;
+      }, { passive: false });
+      browserShell.addEventListener('touchmove', function (event) {
+        if (!browserPage.classList.contains('is-sheet') || event.touches.length !== 2 || !pinchStartDistance) return;
+        event.preventDefault();
+        const nextDistance = distanceBetweenTouches(event.touches);
+        applySheetZoom(pinchStartZoom * (nextDistance / pinchStartDistance));
+      }, { passive: false });
+      browserShell.addEventListener('touchend', function () {
+        if (!browserPage.classList.contains('is-sheet')) return;
+        if (window.innerWidth > 0 && sheetZoom <= 1.02) applySheetZoom(1);
+      }, { passive: true });
+    }
     browserBack.addEventListener('click', closeBrowser);
     browserReload.addEventListener('click', reloadBrowser);
     browserExternal.addEventListener('click', () => { if (currentUrl) window.open(currentUrl, '_blank', 'noopener'); });

@@ -1,7 +1,7 @@
 {
   "name": "ADB Administrativo",
   "short_name": "ADB Admin",
-  "description": "Painel administrativo da ADB Sampaio Corrêa.",
+  "description": "Painel administrativo multi-igrejas da ADB.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -20,6 +20,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }
