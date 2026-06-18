@@ -1,0 +1,12 @@
+ADB Administrativo Multi-Igrejas - Correção Adam FUNCTION_INVOCATION_TIMEOUT
+
+O que foi corrigido:
+- Para relatórios financeiros com mês/ano, o Adam agora usa um caminho rápido pela Google Sheets API.
+- Esse caminho não envia toda a planilha para o Gemini; ele calcula resumo, comparativo, principais dizimistas e principais gastos diretamente na API.
+- Isso reduz muito o risco de FUNCTION_INVOCATION_TIMEOUT na Vercel.
+- O Drive continua sendo usado apenas para localizar IDs/metadados das planilhas; os dados vêm da Sheets API.
+- Mantidas as correções de layout mobile, zoom por pinça, cabeçalho e tela inicial.
+
+Motivo provável do erro:
+- A função da Vercel atingiu o limite de execução ao ler planilhas grandes e ainda chamar o Gemini com muito contexto.
+- Agora relatórios financeiros comuns são resolvidos antes do Gemini, com resposta mais rápida.

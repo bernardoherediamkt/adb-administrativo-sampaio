@@ -758,11 +758,338 @@ ${docs.join('\n\n---\n\n') || (spreadsheetQuestion ? 'Pulados nesta pergunta por
   };
 }
 
+
+function parseMoney(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  const raw = String(value ?? '').trim();
+  if (!raw) return null;
+
+  let s = raw.replace(/\s/g, '').replace(/R\$/gi, '');
+  const hasComma = s.includes(',');
+  const hasDot = s.includes('.');
+
+  if (!/[0-9]/.test(s)) return null;
+
+  if (hasComma && hasDot) {
+    s = s.replace(/\./g, '').replace(',', '.');
+  } else if (hasComma) {
+    s = s.replace(',', '.');
+  }
+
+  s = s.replace(/[^\d.-]/g, '');
+  if (!s || s === '-' || s === '.') return null;
+
+  const n = Number(s);
+  if (!Number.isFinite(n)) return null;
+  return n;
+}
+
+function formatBRL(value) {
+  const n = Number(value || 0);
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function monthNamePt(monthNumber) {
+  const item = MONTHS.find(([, n]) => n === Number(monthNumber));
+  if (!item) return String(monthNumber || '');
+  return item[0].charAt(0).toUpperCase() + item[0].slice(1);
+}
+
+function isDateText(value) {
+  const s = String(value || '').trim();
+  return /^\d{1,2}\/\d{1,2}\/\d{2,4}/.test(s) || /^\d{4}-\d{2}-\d{2}/.test(s);
+}
+
+function rowMoneyValues(row) {
+  return (row || [])
+    .map((cell, index) => ({ value: parseMoney(cell), index, raw: compactCell(cell) }))
+    .filter((item) => item.value !== null && Math.abs(item.value) > 0);
+}
+
+function bestAmountFromRow(row) {
+  const values = rowMoneyValues(row);
+  if (!values.length) return null;
+  // Normalmente o valor financeiro está nas últimas colunas ou formatado em R$.
+  const withCurrency = values.filter((v) => /R\$/i.test(String(v.raw)));
+  const candidates = withCurrency.length ? withCurrency : values;
+  return candidates[candidates.length - 1].value;
+}
+
+function bestTextFromRow(row, mode = 'entry') {
+  const blocked = /(total|saldo|caixa|valor|data|hora|timestamp|carimbo|forma|pagamento|pix|dinheiro|cart[aã]o|tipo|categoria|entrada|sa[ií]da|d[ií]zimo|oferta|campanha|cantina|descri[cç][aã]o|observa)/i;
+
+  const cells = (row || [])
+    .map((cell) => compactCell(cell))
+    .filter(Boolean)
+    .filter((cell) => !isDateText(cell))
+    .filter((cell) => parseMoney(cell) === null)
+    .filter((cell) => !blocked.test(cell));
+
+  if (!cells.length) {
+    const fallback = (row || [])
+      .map((cell) => compactCell(cell))
+      .filter(Boolean)
+      .filter((cell) => !isDateText(cell))
+      .filter((cell) => parseMoney(cell) === null);
+    return fallback[0] || (mode === 'expense' ? 'Despesa sem descrição' : 'Contribuinte não identificado');
+  }
+
+  // Para saída, costuma ser melhor uma descrição maior; para entrada, o nome costuma ser a primeira célula textual boa.
+  if (mode === 'expense') return cells.sort((a, b) => b.length - a.length)[0];
+  return cells[0];
+}
+
+function addGrouped(map, key, amount, meta = {}) {
+  const cleanKey = compactCell(key || 'Não identificado');
+  if (!cleanKey || amount === null || !Number.isFinite(amount)) return;
+  const current = map.get(cleanKey) || { name: cleanKey, total: 0, count: 0, rows: [] };
+  current.total += Number(amount);
+  current.count += 1;
+  if (meta.rowNumber || meta.tab) current.rows.push(meta);
+  map.set(cleanKey, current);
+}
+
+function findSummaryValue(rows, patterns) {
+  for (let i = 0; i < (rows || []).length; i++) {
+    const row = rows[i] || [];
+    const text = normalizeText(row.join(' '));
+    if (!patterns.some((p) => p.test(text))) continue;
+    const values = rowMoneyValues(row);
+    if (values.length) return { value: values[values.length - 1].value, rowNumber: i + 1 };
+  }
+  return null;
+}
+
+function analyzeFinanceTabs(tabs, sheet) {
+  const summary = {
+    sheetName: sheet.name,
+    year: sheet.year || null,
+    month: sheet.month || null,
+    totals: {},
+    topTithers: [],
+    topExpenses: [],
+    notes: []
+  };
+
+  const tithers = new Map();
+  const expenses = new Map();
+  let entryRowsTotal = 0;
+  let expenseRowsTotal = 0;
+
+  for (const tab of tabs || []) {
+    const tabName = normalizeText(tab.tab || '');
+    const rows = tab.rows || [];
+
+    const totalEntradas = findSummaryValue(rows, [/total de entradas/, /total entradas/, /total receita/, /total recebido/]);
+    const totalDizimos = findSummaryValue(rows, [/total de dizimos/, /total de dizimo/, /total dizimos/, /total dizimo/]);
+    const totalOfertas = findSummaryValue(rows, [/total de ofertas/, /total ofertas/]);
+    const totalSaidas = findSummaryValue(rows, [/total de saidas/, /total saidas/, /total despesas/, /total de despesas/]);
+    const saldoAnterior = findSummaryValue(rows, [/saldo anterior/]);
+    const saldoFinal = findSummaryValue(rows, [/saldo final/, /caixa/, /saldo em caixa/]);
+
+    if (totalEntradas && summary.totals.entradas == null) summary.totals.entradas = totalEntradas.value;
+    if (totalDizimos && summary.totals.dizimos == null) summary.totals.dizimos = totalDizimos.value;
+    if (totalOfertas && summary.totals.ofertas == null) summary.totals.ofertas = totalOfertas.value;
+    if (totalSaidas && summary.totals.saidas == null) summary.totals.saidas = totalSaidas.value;
+    if (saldoAnterior && summary.totals.saldoAnterior == null) summary.totals.saldoAnterior = saldoAnterior.value;
+    if (saldoFinal && summary.totals.saldoFinal == null) summary.totals.saldoFinal = saldoFinal.value;
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i] || [];
+      if (!row.length) continue;
+
+      const rowText = normalizeText(row.join(' '));
+      if (!rowText || /total|saldo|caixa/.test(rowText)) continue;
+
+      const amount = bestAmountFromRow(row);
+      if (amount === null || Math.abs(amount) < 1) continue;
+
+      const isEntryTab = /entrada|receita|dizimo|dizimos|oferta/.test(tabName);
+      const isExpenseTab = /saida|saidas|despesa|gasto/.test(tabName);
+
+      const isTithe = /dizimo|dizimos|dízimo|dízimos/.test(rowText) || (/dizimo|dizimos/.test(tabName) && isEntryTab);
+      const isOffer = /oferta|ofertas/.test(rowText);
+      const isExpense = isExpenseTab || /saida|saidas|despesa|gasto|pagamento|salario|aluguel|luz|agua|internet|compra|material/.test(rowText);
+
+      if (isTithe) {
+        const name = bestTextFromRow(row, 'entry');
+        addGrouped(tithers, name, amount, { tab: tab.tab, rowNumber: i + 1 });
+        entryRowsTotal += amount;
+      } else if (isEntryTab && !isOffer && !/campanha|cantina/.test(rowText)) {
+        // Fallback cuidadoso: algumas planilhas têm aba Entradas e uma coluna de tipo não visível no print.
+        // Se não houver palavra “dízimo” na linha, não classifica como dizimista.
+      }
+
+      if (isExpense) {
+        const desc = bestTextFromRow(row, 'expense');
+        addGrouped(expenses, desc, amount, { tab: tab.tab, rowNumber: i + 1 });
+        expenseRowsTotal += amount;
+      }
+    }
+  }
+
+  summary.topTithers = Array.from(tithers.values())
+    .filter((item) => item.total > 0)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 8);
+
+  summary.topExpenses = Array.from(expenses.values())
+    .filter((item) => item.total > 0)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 8);
+
+  if (summary.totals.dizimos == null && entryRowsTotal > 0) summary.totals.dizimos = entryRowsTotal;
+  if (summary.totals.saidas == null && expenseRowsTotal > 0) summary.totals.saidas = expenseRowsTotal;
+
+  return summary;
+}
+
+function buildFinanceAnswer({ church, query, reports, selectedSheets }) {
+  const months = requestedMonths(query);
+  const years = requestedYears(query);
+  const monthLabel = months.length === 1 ? monthNamePt(months[0]) : 'Período solicitado';
+
+  const lines = [];
+  lines.push(`Relatório financeiro — ${church.name}`);
+  lines.push(`Período analisado: ${monthLabel}${years.length ? ' de ' + years.join(' e ') : ''}.`);
+  lines.push('');
+  lines.push('Fonte dos dados: Google Sheets API. O Drive foi usado apenas para localizar as planilhas da igreja selecionada.');
+  lines.push('');
+
+  if (!reports.length) {
+    lines.push('Não consegui localizar planilhas financeiras compatíveis com esse período dentro da igreja selecionada.');
+    lines.push('Planilhas verificadas:');
+    lines.push(...selectedSheets.slice(0, 12).map((s) => `• ${s.name} (${s.year || 'ano não identificado'} / mês ${s.month || 'não identificado'})`));
+    return lines.join('\n');
+  }
+
+  for (const report of reports) {
+    const titleBits = [];
+    if (report.month) titleBits.push(monthNamePt(report.month));
+    if (report.year) titleBits.push(String(report.year));
+    lines.push(`${titleBits.join(' ') || report.sheetName}`);
+    lines.push(`Planilha: ${report.sheetName}`);
+
+    const t = report.totals || {};
+    if (t.entradas != null) lines.push(`• Total de entradas/faturamento: ${formatBRL(t.entradas)}`);
+    if (t.dizimos != null) lines.push(`• Total de dízimos: ${formatBRL(t.dizimos)}`);
+    if (t.ofertas != null) lines.push(`• Total de ofertas: ${formatBRL(t.ofertas)}`);
+    if (t.saidas != null) lines.push(`• Total de saídas/gastos: ${formatBRL(t.saidas)}`);
+    if (t.saldoAnterior != null) lines.push(`• Saldo anterior: ${formatBRL(t.saldoAnterior)}`);
+    if (t.saldoFinal != null) lines.push(`• Saldo final/caixa: ${formatBRL(t.saldoFinal)}`);
+
+    lines.push('');
+
+    lines.push('Principais dizimistas:');
+    if (report.topTithers.length) {
+      for (const item of report.topTithers) {
+        const rowInfo = item.rows?.[0]?.rowNumber ? ` — linha ${item.rows[0].rowNumber}` : '';
+        lines.push(`• ${item.name}: ${formatBRL(item.total)}${item.count > 1 ? ` (${item.count} lançamentos)` : ''}${rowInfo}`);
+      }
+    } else {
+      lines.push('• Não identifiquei os dizimistas individualmente com segurança nos dados lidos.');
+    }
+
+    lines.push('');
+
+    lines.push('Principais gastos:');
+    if (report.topExpenses.length) {
+      for (const item of report.topExpenses) {
+        const rowInfo = item.rows?.[0]?.rowNumber ? ` — linha ${item.rows[0].rowNumber}` : '';
+        lines.push(`• ${item.name}: ${formatBRL(item.total)}${item.count > 1 ? ` (${item.count} lançamentos)` : ''}${rowInfo}`);
+      }
+    } else {
+      lines.push('• Não identifiquei gastos individualmente com segurança nos dados lidos.');
+    }
+
+    lines.push('');
+  }
+
+  if (reports.length >= 2) {
+    const sorted = [...reports].sort((a, b) => (a.year || 0) - (b.year || 0));
+    const older = sorted[0];
+    const newer = sorted[sorted.length - 1];
+
+    lines.push('Comparativo rápido:');
+
+    function diffLine(label, key) {
+      const a = older.totals?.[key];
+      const b = newer.totals?.[key];
+      if (a == null || b == null) return;
+      const diff = b - a;
+      const pct = a ? (diff / a) * 100 : null;
+      const direction = diff >= 0 ? 'aumentou' : 'reduziu';
+      lines.push(`• ${label}: ${direction} ${formatBRL(Math.abs(diff))}${pct !== null ? ` (${Math.abs(pct).toFixed(1).replace('.', ',')}%)` : ''}, de ${formatBRL(a)} para ${formatBRL(b)}.`);
+    }
+
+    diffLine('Entradas/faturamento', 'entradas');
+    diffLine('Dízimos', 'dizimos');
+    diffLine('Ofertas', 'ofertas');
+    diffLine('Saídas/gastos', 'saidas');
+    diffLine('Saldo final', 'saldoFinal');
+    lines.push('');
+  }
+
+  lines.push('Observação: quando alguma linha não deixa claro se é dízimo, oferta ou outro tipo de entrada, eu não classifico como dizimista para evitar erro.');
+  return lines.join('\n');
+}
+
+async function buildFastFinanceReport(query, options = {}) {
+  const church = getChurch(options.churchId);
+  const token = await getGoogleAccessToken([DRIVE_SCOPE, SHEETS_SCOPE]);
+
+  const rootFolders = await findRootFolders({ token, church }).catch(() => []);
+  const folderTree = rootFolders.length ? await listFolderTree({ token, rootFolders, maxDepth: Number(process.env.ADAM_CHURCH_FOLDER_DEPTH || 4) }) : [];
+
+  const spreadsheetFiles = folderTree.length
+    ? await listSpreadsheetsFromFolders({ token, folderTree, limit: Number(process.env.ADAM_CHURCH_SHEETS_LIMIT || 180) }).catch(() => [])
+    : [];
+
+  const discoveredSheets = spreadsheetFiles.map((file) => inferSheetMeta(file, church));
+  const extraSheets = envList('GOOGLE_EXTRA_SPREADSHEET_IDS').map((id, index) => ({
+    name: `Planilha extra ${index + 1}`,
+    id,
+    area: church.name,
+    type: 'extra',
+    churchId: church.id
+  }));
+
+  const sheets = mergeSheets([...church.knownSheets, ...extraSheets], discoveredSheets, church);
+  const selectedSheets = selectSpreadsheets({ sheets, query }).filter((s) => s.type === 'finance' || /finance|controle|20\d{2}|janeiro|fevereiro|marco|março|abril|maio|junho/.test(sheetText(s)));
+
+  const reports = [];
+  for (const sheet of selectedSheets.slice(0, Number(process.env.ADAM_FAST_REPORT_MAX_SHEETS || 4))) {
+    try {
+      const tabs = await readSheetDataViaSheetsApi({ token, spreadsheetId: sheet.id, query, finance: true, members: false });
+      reports.push(analyzeFinanceTabs(tabs, sheet));
+    } catch (error) {
+      reports.push({
+        sheetName: sheet.name,
+        year: sheet.year,
+        month: sheet.month,
+        totals: {},
+        topTithers: [],
+        topExpenses: [],
+        notes: [`Não foi possível ler pela Sheets API: ${error.message}`]
+      });
+    }
+  }
+
+  return {
+    answer: buildFinanceAnswer({ church, query, reports, selectedSheets }),
+    church,
+    reports,
+    selectedSheets: selectedSheets.map((s) => ({ name: s.name, id: s.id, year: s.year, month: s.month, type: s.type }))
+  };
+}
+
+
 module.exports = {
   buildDriveContext,
   CHURCHES,
   inferSpreadsheetQuestion,
   inferFinanceQuestion,
   requestedMonths,
-  requestedYears
+  requestedYears,
+  buildFastFinanceReport
 };
