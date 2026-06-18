@@ -1,0 +1,17 @@
+ADB Administrativo — Adam Assistente Virtual
+
+Versão para Vercel com:
+- App principal ADB Administrativo.
+- Adam Assistente Virtual na página inicial.
+- Gemini para respostas em texto.
+- Google Drive API via Service Account para consultar documentos, planilhas, membros, relatórios e financeiro.
+- Artes de Eventos em modo “Em breve”.
+
+Leia primeiro:
+- LEIA-ME-ADAM-SERVICE-ACCOUNT.txt
+- docs/SETUP_SERVICE_ACCOUNT_DRIVE.md
+
+Não use mais Google Apps Script nesta versão.
+
+
+Atualização: Artes de Eventos permanece como 'Em breve' para futura API paga de imagem. Adam está configurado para Vercel + Gemini + Drive via Service Account.

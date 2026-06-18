@@ -1,0 +1,12 @@
+ADB Administrativo Multi-Igrejas - Correção final da barra superior no iPhone
+
+Correções desta versão:
+- Ajustado o status bar do PWA para não deixar hora/Wi‑Fi/bateria por cima do cabeçalho.
+- Adicionado espaçamento seguro no topo para Safari e app salvo na tela inicial.
+- Mantido o cabeçalho interno desfixado, apenas no início da página.
+- Mantido o zoom por pinça nas planilhas.
+- Mantidos os botões de zoom nas planilhas.
+- Mantidas todas as correções do Adam, Sheets API, comparativo financeiro e tela inicial.
+
+Depois do redeploy:
+- Remova o app antigo da tela inicial do iPhone e instale novamente pelo Safari para atualizar status bar/ícone/cache.

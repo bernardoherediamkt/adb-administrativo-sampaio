@@ -1,0 +1,20 @@
+ATUALIZAÇÃO — ADAM COM BUSCA GLOBAL DE PLANILHAS
+
+Esta versão corrige a limitação anterior em que o Adam lia principalmente as planilhas fixas conhecidas do app, especialmente as financeiras de 2026.
+
+O que mudou:
+- Adam agora lista globalmente as planilhas visíveis para a Service Account pelo Google Drive API.
+- Depois seleciona as planilhas mais prováveis conforme a pergunta: ano, mês, trimestre, membros, cadastro, financeiro etc.
+- Para planilhas selecionadas, a leitura é feita pela Google Sheets API direta.
+- Perguntas sobre 2025, primeiro trimestre do ano passado, membros recentes e cadastros passam a ter chance real de localizar planilhas fora da lista fixa.
+
+Variáveis opcionais na Vercel:
+ADAM_DISCOVER_SHEETS_LIMIT=120
+ADAM_MAX_FINANCE_SHEETS=24
+ADAM_MAX_MEMBER_SHEETS=10
+ADAM_SHEETS_MAX_ROWS=1600
+ADAM_SHEETS_MAX_COLS=60
+ADAM_MEMBERS_MAX_ROWS=2000
+
+Importante:
+A Service Account só enxerga arquivos compartilhados com ela. Se uma planilha estiver em um Drive compartilhado, atalho, outra conta ou pasta sem permissão herdada, ela não aparecerá.
