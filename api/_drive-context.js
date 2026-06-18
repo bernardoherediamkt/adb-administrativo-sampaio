@@ -139,6 +139,16 @@ function requestedMonths(query) {
   // Ex.: março deste ano em relação a março do ano passado = março/ano atual e março/ano anterior.
   if (months.length) return Array.from(new Set(months));
 
+  if (/ultimo trimestre|último trimestre|ultimos tres meses|últimos três meses|ultimos 3 meses|últimos 3 meses/.test(q)) {
+    const currentMonth = Number(process.env.ADAM_CURRENT_MONTH || (new Date().getMonth() + 1));
+    const result = [];
+    for (let i = 2; i >= 0; i--) {
+      let m = currentMonth - i;
+      if (m <= 0) m += 12;
+      result.push(m);
+    }
+    return result;
+  }
   if (/primeiro trimestre|1 trimestre|1o trimestre|1º trimestre/.test(q)) return [1, 2, 3];
   if (/segundo trimestre|2 trimestre|2o trimestre|2º trimestre/.test(q)) return [4, 5, 6];
   if (/terceiro trimestre|3 trimestre|3o trimestre|3º trimestre/.test(q)) return [7, 8, 9];
@@ -761,27 +771,42 @@ ${docs.join('\n\n---\n\n') || (spreadsheetQuestion ? 'Pulados nesta pergunta por
 
 function parseMoney(value) {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
+
   const raw = String(value ?? '').trim();
   if (!raw) return null;
+  if (!/[0-9]/.test(raw)) return null;
 
   let s = raw.replace(/\s/g, '').replace(/R\$/gi, '');
+  const negative = /^\-/.test(s) || /\(\s*R?\$?\s*[\d.,]+\s*\)/.test(raw);
+
+  s = s.replace(/[()]/g, '').replace(/^\-/, '');
+
   const hasComma = s.includes(',');
   const hasDot = s.includes('.');
 
-  if (!/[0-9]/.test(s)) return null;
-
   if (hasComma && hasDot) {
+    // padrão brasileiro: 1.234,56
     s = s.replace(/\./g, '').replace(',', '.');
   } else if (hasComma) {
+    // padrão brasileiro decimal: 1234,56
     s = s.replace(',', '.');
+  } else if (hasDot) {
+    const dotParts = s.split('.');
+    const last = dotParts[dotParts.length - 1];
+
+    // Se o ponto parece separador de milhar: 3.500, 20.765, 1.234.567
+    if (last.length === 3 && dotParts.every((part, index) => index === 0 ? /^\d{1,3}$/.test(part) : /^\d{3}$/.test(part))) {
+      s = dotParts.join('');
+    }
+    // Caso contrário, mantém como decimal internacional.
   }
 
-  s = s.replace(/[^\d.-]/g, '');
-  if (!s || s === '-' || s === '.') return null;
+  s = s.replace(/[^\d.]/g, '');
+  if (!s || s === '.') return null;
 
   const n = Number(s);
   if (!Number.isFinite(n)) return null;
-  return n;
+  return negative ? -Math.abs(n) : n;
 }
 
 function formatBRL(value) {
@@ -938,8 +963,8 @@ function analyzeFinanceTabs(tabs, sheet) {
     .sort((a, b) => b.total - a.total)
     .slice(0, 8);
 
-  if (summary.totals.dizimos == null && entryRowsTotal > 0) summary.totals.dizimos = entryRowsTotal;
-  if (summary.totals.saidas == null && expenseRowsTotal > 0) summary.totals.saidas = expenseRowsTotal;
+  // Não preencher totais gerais por soma automática de linhas sem certeza.
+  // Isso evita números errados quando a estrutura da planilha muda.
 
   return summary;
 }
@@ -952,8 +977,6 @@ function buildFinanceAnswer({ church, query, reports, selectedSheets }) {
   const lines = [];
   lines.push(`Relatório financeiro — ${church.name}`);
   lines.push(`Período analisado: ${monthLabel}${years.length ? ' de ' + years.join(' e ') : ''}.`);
-  lines.push('');
-  lines.push('Fonte dos dados: Google Sheets API. O Drive foi usado apenas para localizar as planilhas da igreja selecionada.');
   lines.push('');
 
   if (!reports.length) {
@@ -983,8 +1006,7 @@ function buildFinanceAnswer({ church, query, reports, selectedSheets }) {
     lines.push('Principais dizimistas:');
     if (report.topTithers.length) {
       for (const item of report.topTithers) {
-        const rowInfo = item.rows?.[0]?.rowNumber ? ` — linha ${item.rows[0].rowNumber}` : '';
-        lines.push(`• ${item.name}: ${formatBRL(item.total)}${item.count > 1 ? ` (${item.count} lançamentos)` : ''}${rowInfo}`);
+        lines.push(`• ${item.name}: ${formatBRL(item.total)}${item.count > 1 ? ` (${item.count} lançamentos)` : ''}`);
       }
     } else {
       lines.push('• Não identifiquei os dizimistas individualmente com segurança nos dados lidos.');
@@ -995,8 +1017,7 @@ function buildFinanceAnswer({ church, query, reports, selectedSheets }) {
     lines.push('Principais gastos:');
     if (report.topExpenses.length) {
       for (const item of report.topExpenses) {
-        const rowInfo = item.rows?.[0]?.rowNumber ? ` — linha ${item.rows[0].rowNumber}` : '';
-        lines.push(`• ${item.name}: ${formatBRL(item.total)}${item.count > 1 ? ` (${item.count} lançamentos)` : ''}${rowInfo}`);
+        lines.push(`• ${item.name}: ${formatBRL(item.total)}${item.count > 1 ? ` (${item.count} lançamentos)` : ''}`);
       }
     } else {
       lines.push('• Não identifiquei gastos individualmente com segurança nos dados lidos.');
@@ -1033,6 +1054,179 @@ function buildFinanceAnswer({ church, query, reports, selectedSheets }) {
   lines.push('Observação: quando alguma linha não deixa claro se é dízimo, oferta ou outro tipo de entrada, eu não classifico como dizimista para evitar erro.');
   return lines.join('\n');
 }
+
+
+function inferExpenseCategoryQuery(query) {
+  const q = normalizeText(query);
+  return /(insumo|insumos|categoria|tipo de gasto|tipos de gasto|quais tipos|por tipo|cantina|limpeza|kids|descartav|papelaria|recepcao|recepção|material|materiais)/.test(q);
+}
+
+function expenseSearchTerms(query) {
+  const q = normalizeText(query);
+  const terms = new Set(extractQueryTerms(query));
+
+  if (/insumo|insumos/.test(q)) {
+    [
+      'insumo','insumos','limpeza','kids','infantil','crianca','criança','biscoito','papel','papelaria',
+      'descartavel','descartável','copo','prato','talher','guardanapo','recepcao','recepção',
+      'cafe','café','agua','água','material','materiais','higiene','cozinha'
+    ].forEach((t) => terms.add(t));
+  }
+
+  if (/cantina/.test(q)) {
+    ['cantina','bebida','salgado','pastel','massa','alimento','refrigerante','agua','água','lanche'].forEach((t) => terms.add(t));
+  }
+
+  return Array.from(terms).map(normalizeText).filter(Boolean);
+}
+
+function classifyExpenseType(description) {
+  const d = normalizeText(description);
+  if (/(limpeza|detergente|desinfetante|sabao|sabão|agua sanitaria|água sanitária|higiene|papel higienico|papel higiênico)/.test(d)) return 'Limpeza e higiene';
+  if (/(kids|crianca|criança|infantil|biscoito|suco|lanche)/.test(d)) return 'Kids / Infantil';
+  if (/(descartavel|descartável|copo|prato|talher|guardanapo|sacola)/.test(d)) return 'Descartáveis';
+  if (/(papelaria|papel|caneta|impressao|impressão|toner|cartucho|etiqueta)/.test(d)) return 'Papelaria';
+  if (/(recepcao|recepção|visitante|convidado|cafe|café|agua|água)/.test(d)) return 'Recepção';
+  if (/(cozinha|cantina|bebida|salgado|pastel|refrigerante|alimento|mercado)/.test(d)) return 'Cozinha / Cantina';
+  if (/(material|materiais|insumo|insumos)/.test(d)) return 'Materiais / Insumos';
+  return 'Outros insumos';
+}
+
+function rowLooksLikeExpense(row, tabName) {
+  const text = normalizeText((row || []).join(' '));
+  const tab = normalizeText(tabName || '');
+  return /saida|saidas|despesa|gasto|pagamento|compra/.test(tab) || /saida|saidas|despesa|gasto|pagamento|compra/.test(text);
+}
+
+function rowMatchesTerms(row, terms) {
+  const text = normalizeText((row || []).join(' '));
+  if (!terms.length) return false;
+  return terms.some((term) => term && text.includes(term));
+}
+
+function buildCategoryExpenseReport({ church, query, reports }) {
+  const months = requestedMonths(query);
+  const years = requestedYears(query);
+  const monthNames = months.map(monthNamePt).join(', ') || 'período solicitado';
+  const yearNames = years.join(', ') || String(CURRENT_YEAR);
+
+  const allItems = [];
+  const byType = new Map();
+  const byMonth = new Map();
+
+  for (const report of reports) {
+    for (const item of report.items || []) {
+      allItems.push(item);
+      addGrouped(byType, item.type, item.amount, {});
+      addGrouped(byMonth, `${monthNamePt(report.month)} ${report.year}`, item.amount, {});
+    }
+  }
+
+  const total = allItems.reduce((sum, item) => sum + item.amount, 0);
+  const typeList = Array.from(byType.values()).sort((a, b) => b.total - a.total);
+  const monthList = Array.from(byMonth.values()).sort((a, b) => a.name.localeCompare(b.name));
+
+  const lines = [];
+  lines.push(`Relatório de gastos com insumos — ${church.name}`);
+  lines.push(`Período: ${monthNames} de ${yearNames}.`);
+  lines.push('');
+
+  if (!allItems.length) {
+    lines.push('Não encontrei lançamentos de insumos nesse período com segurança.');
+    lines.push('Tente informar uma palavra específica, como limpeza, descartáveis, kids, papelaria, recepção ou cantina.');
+    return lines.join('\n');
+  }
+
+  lines.push(`Total encontrado em insumos: ${formatBRL(total)}`);
+  lines.push('');
+
+  lines.push('Gastos por tipo:');
+  for (const item of typeList.slice(0, 10)) {
+    lines.push(`• ${item.name}: ${formatBRL(item.total)}`);
+  }
+
+  lines.push('');
+  lines.push('Gastos por mês:');
+  for (const item of monthList) {
+    lines.push(`• ${item.name}: ${formatBRL(item.total)}`);
+  }
+
+  lines.push('');
+  lines.push('Principais lançamentos:');
+  allItems
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 12)
+    .forEach((item) => {
+      lines.push(`• ${item.description}: ${formatBRL(item.amount)} (${monthNamePt(item.month)} ${item.year})`);
+    });
+
+  lines.push('');
+  lines.push('Observação: considerei apenas linhas que continham termos relacionados a insumos. Se algum item foi lançado com outro nome, posso buscar por essa palavra específica.');
+  return lines.join('\n');
+}
+
+async function buildFastCategoryExpenseReport(query, options = {}) {
+  const church = getChurch(options.churchId);
+  const token = await getGoogleAccessToken([DRIVE_SCOPE, SHEETS_SCOPE]);
+
+  const rootFolders = await findRootFolders({ token, church }).catch(() => []);
+  const folderTree = rootFolders.length ? await listFolderTree({ token, rootFolders, maxDepth: Number(process.env.ADAM_CHURCH_FOLDER_DEPTH || 4) }) : [];
+
+  const spreadsheetFiles = folderTree.length
+    ? await listSpreadsheetsFromFolders({ token, folderTree, limit: Number(process.env.ADAM_CHURCH_SHEETS_LIMIT || 180) }).catch(() => [])
+    : [];
+
+  const discoveredSheets = spreadsheetFiles.map((file) => inferSheetMeta(file, church));
+  const sheets = mergeSheets([...church.knownSheets], discoveredSheets, church);
+  const selectedSheets = selectSpreadsheets({ sheets, query }).filter((s) => s.type === 'finance' || /finance|controle|20\d{2}|janeiro|fevereiro|marco|março|abril|maio|junho/.test(sheetText(s)));
+
+  const terms = expenseSearchTerms(query);
+  const reports = [];
+
+  for (const sheet of selectedSheets.slice(0, Number(process.env.ADAM_FAST_REPORT_MAX_SHEETS || 6))) {
+    try {
+      const tabs = await readSheetDataViaSheetsApi({ token, spreadsheetId: sheet.id, query, finance: true, members: false });
+      const report = { sheetName: sheet.name, year: sheet.year, month: sheet.month, items: [] };
+
+      for (const tab of tabs || []) {
+        for (let i = 0; i < (tab.rows || []).length; i++) {
+          const row = tab.rows[i] || [];
+          if (!row.length) continue;
+          const rowText = normalizeText(row.join(' '));
+          if (/total|saldo|caixa/.test(rowText)) continue;
+          if (!rowLooksLikeExpense(row, tab.tab)) continue;
+          if (!rowMatchesTerms(row, terms)) continue;
+
+          const amountRaw = bestAmountFromRow(row);
+          if (amountRaw === null) continue;
+          const amount = Math.abs(amountRaw);
+          if (!amount || amount < 1) continue;
+
+          const description = bestTextFromRow(row, 'expense');
+          report.items.push({
+            description,
+            amount,
+            type: classifyExpenseType(description + ' ' + row.join(' ')),
+            month: sheet.month,
+            year: sheet.year
+          });
+        }
+      }
+
+      reports.push(report);
+    } catch (error) {
+      reports.push({ sheetName: sheet.name, year: sheet.year, month: sheet.month, items: [] });
+    }
+  }
+
+  return {
+    answer: buildCategoryExpenseReport({ church, query, reports }),
+    church,
+    reports,
+    selectedSheets: selectedSheets.map((s) => ({ name: s.name, id: s.id, year: s.year, month: s.month, type: s.type }))
+  };
+}
+
 
 async function buildFastFinanceReport(query, options = {}) {
   const church = getChurch(options.churchId);
@@ -1091,5 +1285,7 @@ module.exports = {
   inferFinanceQuestion,
   requestedMonths,
   requestedYears,
-  buildFastFinanceReport
+  buildFastFinanceReport,
+  buildFastCategoryExpenseReport,
+  inferExpenseCategoryQuery
 };

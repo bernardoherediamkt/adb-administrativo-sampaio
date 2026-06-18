@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { buildDriveContext, buildFastFinanceReport, inferFinanceQuestion, requestedMonths, requestedYears } = require('./_drive-context');
+const { buildDriveContext, buildFastFinanceReport, buildFastCategoryExpenseReport, inferExpenseCategoryQuery, inferFinanceQuestion, requestedMonths, requestedYears } = require('./_drive-context');
 
 function readMemoryFile(relativePath, fallback = '') {
   try {
@@ -239,6 +239,18 @@ module.exports = async function handler(req, res) {
     if (!message) return res.status(400).json({ error: 'Mensagem vazia.' });
 
     const churchId = String(body.churchId || 'sampaio').trim();
+
+    if (shouldUseFastFinanceReport(message) && inferExpenseCategoryQuery(message)) {
+      const fast = await buildFastCategoryExpenseReport(message, { churchId });
+      return res.status(200).json({
+        answer: fast.answer,
+        model: 'sheets-api-category-expense-report',
+        driveConnected: true,
+        source: 'google_sheets_api',
+        church: fast.church,
+        selectedSheets: fast.selectedSheets
+      });
+    }
 
     if (shouldUseFastFinanceReport(message)) {
       const fast = await buildFastFinanceReport(message, { churchId });

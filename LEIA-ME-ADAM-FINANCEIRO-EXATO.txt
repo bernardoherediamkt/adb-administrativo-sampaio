@@ -1,0 +1,11 @@
+ADB Administrativo Multi-Igrejas - Adam Financeiro Exato
+
+Correções:
+- Corrigido parse de valores brasileiros: 3.500 agora é R$ 3.500,00, não R$ 3,50.
+- Relatórios por categoria, como “insumos”, não retornam mais relatório geral com dizimistas.
+- Perguntas sobre insumos agora buscam apenas saídas/gastos que contêm termos relacionados a insumos.
+- Relatório ficou mais enxuto.
+- Removidas referências a linha da planilha.
+- Removido texto dizendo que a fonte é Google Sheets API na resposta ao usuário.
+- O Drive continua sendo usado apenas para localizar planilhas; os valores vêm das planilhas via Sheets API.
+- Se não encontrar dados com segurança, o Adam deve dizer que não encontrou, sem inventar.
