@@ -518,6 +518,40 @@
       }
     }
 
+  
+    /* mobile-header-safe-final-v16 */
+    @media (max-width: 760px) {
+      /*
+        Correção final do topo interno:
+        empurra o painel da igreja para baixo da área nativa do iPhone
+        para hora, Wi‑Fi e bateria não ficarem em cima do botão Trocar.
+      */
+      #mainMenu.app {
+        padding-top: max(92px, calc(env(safe-area-inset-top) + 58px)) !important;
+      }
+
+      #mainMenu .app-header {
+        margin-top: 0 !important;
+        position: relative !important;
+        top: auto !important;
+        z-index: 1 !important;
+      }
+
+      #churchGate.church-gate {
+        padding-top: max(18px, env(safe-area-inset-top)) !important;
+      }
+
+      .browser-page {
+        padding-top: max(calc(env(safe-area-inset-top) + 14px), 42px) !important;
+      }
+    }
+
+    @media (max-width: 760px) and (display-mode: standalone) {
+      #mainMenu.app {
+        padding-top: max(104px, calc(env(safe-area-inset-top) + 66px)) !important;
+      }
+    }
+
   </style>
 </head>
 <body>

@@ -1,0 +1,10 @@
+ADB Administrativo Multi-Igrejas - Correção final do cabeçalho mobile
+
+Correção feita:
+- O painel interno da igreja agora ganha espaçamento superior real no mobile.
+- A hora, Wi‑Fi e bateria do iPhone não devem mais ficar em cima da logo, nome da igreja ou botão Trocar.
+- A alteração foi feita apenas no layout mobile.
+- Mantidos: zoom por pinça, botões de zoom, Adam, Sheets API e comparativo financeiro.
+
+Depois do redeploy:
+- No iPhone, remova o app antigo da Tela de Início e instale novamente pelo Safari para limpar o cache antigo do PWA.
