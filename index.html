@@ -164,7 +164,6 @@
 
       .browser-bar { height: 64px; flex-basis: 64px; padding: 10px 14px; }
       .browser-back, .browser-action { width:44px; height:44px; border-radius:14px; font-size:20px; }
-      .browser-page.is-sheet .browser-subtitle::after { content: ' • pinça para zoom'; }
       .browser-page.is-sheet .browser-shell { touch-action: pan-x pan-y pinch-zoom; }
     }
 
@@ -204,6 +203,175 @@
       .church-pill strong { font-size:13px !important; white-space:nowrap !important; }
       .switch-btn { padding:8px 10px !important; border-radius:12px !important; font-size:13px !important; }
       .church-card, .church-card h2 { color: var(--text) !important; }
+    }
+
+
+
+    /* mobile-funcional-ajustes-v12 */
+    @media (max-width: 760px) {
+      html, body { overscroll-behavior-y: none; }
+
+      /* Cabeçalho interno mobile: só logo + igreja + trocar */
+      .app-header {
+        position: sticky !important;
+        top: max(8px, calc(env(safe-area-inset-top, 0px) + 6px)) !important;
+        z-index: 18 !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 10px !important;
+        padding: 8px 10px !important;
+        margin: 0 0 14px !important;
+        border-radius: 20px !important;
+        background: rgba(255, 252, 244, .88) !important;
+        backdrop-filter: blur(18px) !important;
+        -webkit-backdrop-filter: blur(18px) !important;
+      }
+      .app-header .identity {
+        flex: 0 0 auto !important;
+        min-width: auto !important;
+        gap: 0 !important;
+      }
+      .app-header .eyebrow,
+      .app-header .identity h1 { display: none !important; }
+      .app-header .logo-wrap {
+        width: 54px !important;
+        height: 54px !important;
+        flex: 0 0 54px !important;
+        padding: 5px !important;
+      }
+      .app-header .church-pill {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        margin-left: 0 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 7px 7px 7px 12px !important;
+        border-radius: 18px !important;
+      }
+      .app-header .church-pill strong {
+        min-width: 0 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        font-size: clamp(15px, 4.4vw, 18px) !important;
+        letter-spacing: -.04em !important;
+        color: var(--text) !important;
+      }
+      .app-header .switch-btn,
+      .app-header .change-church {
+        flex: 0 0 auto !important;
+        padding: 10px 14px !important;
+        min-height: 44px !important;
+        border-radius: 15px !important;
+        font-size: clamp(14px, 4vw, 17px) !important;
+        line-height: 1 !important;
+      }
+
+      /* Navegador/planilhas: respeita área segura do iPhone e não cobre relógio/sinal. */
+      .browser-page {
+        box-sizing: border-box !important;
+        padding-top: env(safe-area-inset-top, 0px) !important;
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+        background: var(--black) !important;
+      }
+      .browser-page.is-open { display: flex !important; }
+      .browser-bar {
+        height: auto !important;
+        flex: 0 0 auto !important;
+        min-height: 58px !important;
+        gap: 8px !important;
+        padding: 8px 10px !important;
+        box-shadow: none !important;
+      }
+      .browser-back,
+      .browser-action {
+        width: 46px !important;
+        height: 46px !important;
+        min-width: 46px !important;
+        border-radius: 14px !important;
+        font-size: 21px !important;
+      }
+      .browser-meta { min-width: 0 !important; flex: 1 1 auto !important; }
+      .browser-title {
+        font-size: 17px !important;
+        line-height: 1.05 !important;
+        max-width: 100% !important;
+      }
+      .browser-subtitle { font-size: 11px !important; margin-top: 1px !important; }
+      .browser-page.is-sheet .browser-subtitle::after { content: '' !important; }
+      .browser-page.is-sheet .browser-subtitle { font-size: 0 !important; }
+      .browser-page.is-sheet .browser-subtitle::before { content: 'Planilha Google'; font-size: 11px; }
+
+      /* Zoom da planilha. O botão é apoio; a planilha abre reduzida para caber melhor no iPhone. */
+      .browser-shell {
+        --sheet-scale: 1;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        background: #fff !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+        touch-action: pan-x pan-y pinch-zoom !important;
+      }
+      .browser-zoom-surface {
+        width: 100% !important;
+        height: 100% !important;
+        min-width: 100% !important;
+        min-height: 100% !important;
+        overflow: hidden !important;
+        transform-origin: top left !important;
+      }
+      .browser-frame {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 100% !important;
+        transform-origin: top left !important;
+      }
+      .browser-page.is-sheet .browser-zoom-surface {
+        width: 100% !important;
+        height: 100% !important;
+      }
+      .browser-page.is-sheet .browser-frame {
+        width: calc(100% / var(--sheet-scale)) !important;
+        height: calc(100% / var(--sheet-scale)) !important;
+        transform: scale(var(--sheet-scale)) !important;
+      }
+
+      .sheet-zoom-controls {
+        display: none;
+        align-items: center;
+        gap: 4px;
+        flex: 0 0 auto;
+      }
+      .browser-page.is-sheet .sheet-zoom-controls { display: flex !important; }
+      .sheet-zoom-btn {
+        width: 34px;
+        height: 36px;
+        border: 0;
+        border-radius: 12px;
+        background: rgba(255,255,255,.13);
+        color: var(--off-white);
+        font-weight: 900;
+        font-size: 18px;
+      }
+      .sheet-zoom-fit {
+        width: 48px;
+        font-size: 12px;
+        letter-spacing: -.03em;
+      }
+      .browser-page.is-sheet .browser-reload { display: none !important; }
+
+      @media (max-width: 390px) {
+        .browser-bar { gap: 6px !important; padding-left: 8px !important; padding-right: 8px !important; }
+        .browser-back, .browser-action { width: 42px !important; height: 42px !important; min-width: 42px !important; }
+        .sheet-zoom-btn { width: 31px; height: 34px; border-radius: 11px; }
+        .sheet-zoom-fit { width: 42px; font-size: 11px; }
+        .browser-title { font-size: 15px !important; }
+      }
     }
 
   </style>
@@ -299,7 +467,12 @@
         <div class="browser-title" id="browserTitle">ADB Administrativo</div>
         <div class="browser-subtitle" id="browserSubtitle">Abrindo dentro do app</div>
       </div>
-      <button class="browser-action" type="button" id="browserReload" aria-label="Recarregar">↻</button>
+      <div class="sheet-zoom-controls" id="sheetZoomControls" aria-label="Zoom da planilha">
+        <button class="sheet-zoom-btn" type="button" id="sheetZoomOut" aria-label="Diminuir zoom">−</button>
+        <button class="sheet-zoom-btn sheet-zoom-fit" type="button" id="sheetZoomFit" aria-label="Ajustar zoom">70%</button>
+        <button class="sheet-zoom-btn" type="button" id="sheetZoomIn" aria-label="Aumentar zoom">+</button>
+      </div>
+      <button class="browser-action browser-reload" type="button" id="browserReload" aria-label="Recarregar">↻</button>
       <button class="browser-action" type="button" id="browserExternal" aria-label="Abrir fora">↗</button>
     </div>
     <div class="browser-shell" id="browserShell">
@@ -555,6 +728,9 @@
     const browserBack = document.getElementById('browserBack');
     const browserReload = document.getElementById('browserReload');
     const browserExternal = document.getElementById('browserExternal');
+    const sheetZoomOut = document.getElementById('sheetZoomOut');
+    const sheetZoomFit = document.getElementById('sheetZoomFit');
+    const sheetZoomIn = document.getElementById('sheetZoomIn');
     const browserTitle = document.getElementById('browserTitle');
     const browserSubtitle = document.getElementById('browserSubtitle');
     const browserFrame = document.getElementById('browserFrame');
@@ -572,13 +748,18 @@
       try { const parsed = new URL(url); if (!parsed.searchParams.has('rm')) parsed.searchParams.set('rm', 'minimal'); return parsed.toString(); } catch { return url; }
     }
     function isMobileLayout() { return window.matchMedia && window.matchMedia('(max-width: 760px)').matches; }
-    function clampZoom(value) { return Math.max(0.85, Math.min(3, Number(value) || 1)); }
+    function clampZoom(value) { return Math.max(0.55, Math.min(2.4, Number(value) || 1)); }
+    function updateSheetZoomLabel() {
+      if (sheetZoomFit) sheetZoomFit.textContent = Math.round(sheetZoom * 100) + '%';
+    }
     function applySheetZoom(value) {
       sheetZoom = clampZoom(value);
       if (browserShell) browserShell.style.setProperty('--sheet-scale', String(sheetZoom));
+      updateSheetZoomLabel();
     }
     function resetSheetZoom(url) {
-      applySheetZoom(isSpreadsheetUrl(url) && isMobileLayout() ? 1.12 : 1);
+      // No celular, a planilha abre reduzida para caber melhor e mostrar abas como Entradas/Saídas.
+      applySheetZoom(isSpreadsheetUrl(url) && isMobileLayout() ? 0.72 : 1);
       if (browserShell) { browserShell.scrollLeft = 0; browserShell.scrollTop = 0; }
     }
     function distanceBetweenTouches(touches) {
@@ -621,9 +802,12 @@
       }, { passive: false });
       browserShell.addEventListener('touchend', function () {
         if (!browserPage.classList.contains('is-sheet')) return;
-        if (window.innerWidth > 0 && sheetZoom <= 1.02) applySheetZoom(1);
+        pinchStartDistance = 0;
       }, { passive: true });
     }
+    if (sheetZoomOut) sheetZoomOut.addEventListener('click', () => applySheetZoom(sheetZoom - 0.12));
+    if (sheetZoomIn) sheetZoomIn.addEventListener('click', () => applySheetZoom(sheetZoom + 0.12));
+    if (sheetZoomFit) sheetZoomFit.addEventListener('click', () => applySheetZoom(isMobileLayout() ? 0.72 : 1));
     browserBack.addEventListener('click', closeBrowser);
     browserReload.addEventListener('click', reloadBrowser);
     browserExternal.addEventListener('click', () => { if (currentUrl) window.open(currentUrl, '_blank', 'noopener'); });

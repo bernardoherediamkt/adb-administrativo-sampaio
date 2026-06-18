@@ -1,4 +1,4 @@
-const CACHE_NAME = 'adb-administrativo-mobile-ajustado-v12';
+const CACHE_NAME = 'adb-administrativo-mobile-funcional-v12';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png','./icons/icon-1024.png'];
 
 self.addEventListener('install', (event) => {
