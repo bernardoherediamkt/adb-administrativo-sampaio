@@ -164,6 +164,7 @@
 
       .browser-bar { height: 64px; flex-basis: 64px; padding: 10px 14px; }
       .browser-back, .browser-action { width:44px; height:44px; border-radius:14px; font-size:20px; }
+      .browser-page.is-sheet .browser-subtitle::after { content: ''; }
       .browser-page.is-sheet .browser-shell { touch-action: pan-x pan-y pinch-zoom; }
     }
 
@@ -371,6 +372,110 @@
         .sheet-zoom-btn { width: 31px; height: 34px; border-radius: 11px; }
         .sheet-zoom-fit { width: 42px; font-size: 11px; }
         .browser-title { font-size: 15px !important; }
+      }
+    }
+
+  
+    /* mobile-estavel-final-v13 */
+    @media (max-width: 760px) {
+      /* Cabeçalho interno desfixado: fica apenas no início da página e não cobre o Adam. */
+      .app-header,
+      body .app-header {
+        position: relative !important;
+        top: auto !important;
+        z-index: 1 !important;
+        margin: 0 0 16px !important;
+        transform: none !important;
+      }
+      .app-header .identity h1,
+      .app-header .eyebrow {
+        display: none !important;
+      }
+      .app-header .logo-wrap {
+        width: 54px !important;
+        height: 54px !important;
+        flex: 0 0 54px !important;
+      }
+      .app-header .church-pill {
+        min-height: 58px !important;
+      }
+
+      /* Evita que o topo do navegador da planilha encoste na área nativa do iPhone. */
+      .browser-page {
+        padding-top: max(env(safe-area-inset-top, 0px), 14px) !important;
+        padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px) !important;
+      }
+
+      /* Planilhas: manter zoom pelos botões e gesto nativo do WebView, sem touchmove JS. */
+      .browser-shell {
+        overflow: hidden !important;
+        touch-action: auto !important;
+        overscroll-behavior: contain !important;
+      }
+      .browser-page.is-sheet .browser-shell {
+        touch-action: auto !important;
+      }
+      .browser-zoom-surface,
+      .browser-frame {
+        will-change: auto !important;
+        backface-visibility: hidden !important;
+        -webkit-backface-visibility: hidden !important;
+      }
+
+      .browser-page.is-sheet .browser-subtitle::after {
+        content: '' !important;
+      }
+      .browser-page.is-sheet .browser-subtitle::before {
+        content: 'Planilha Google' !important;
+      }
+    }
+
+  
+    /* mobile-pinca-estavel-v14 */
+    @media (max-width: 760px) {
+      /* Remove frase inútil no cabeçalho da planilha. */
+      .browser-page.is-sheet .browser-subtitle::after {
+        content: '' !important;
+      }
+
+      /* Mantém o cabeçalho interno dentro do fluxo da página, sem cobrir Adam. */
+      .app-header,
+      body .app-header {
+        position: relative !important;
+        top: auto !important;
+        z-index: 1 !important;
+        margin: 0 0 16px !important;
+        transform: none !important;
+      }
+
+      .browser-page {
+        padding-top: max(env(safe-area-inset-top), 18px) !important;
+      }
+
+      .browser-bar {
+        position: relative !important;
+        top: auto !important;
+        z-index: 10 !important;
+      }
+
+      .browser-shell {
+        overscroll-behavior: contain !important;
+        -webkit-overflow-scrolling: touch !important;
+        touch-action: pan-x pan-y !important;
+      }
+
+      .browser-shell.is-pinching {
+        touch-action: none !important;
+        -webkit-overflow-scrolling: auto !important;
+      }
+
+      .browser-page.is-sheet .browser-zoom-surface {
+        transform-origin: 0 0 !important;
+        will-change: transform;
+      }
+
+      .browser-shell.is-pinching .browser-frame {
+        pointer-events: none;
       }
     }
 
@@ -702,27 +807,7 @@
     try { localStorage.removeItem('adb_selected_church'); } catch {}
     showChurchGate();
     changeChurchBtn.addEventListener('click', showChurchGate);
-
-    function resetToGateOnAppClose() {
-      currentChurchId = '';
-      currentChurch = null;
-      try { localStorage.removeItem('adb_selected_church'); } catch {}
-      if (mainMenu && churchGate) {
-        mainMenu.hidden = true;
-        churchGate.hidden = false;
-      }
-    }
-
-    window.addEventListener('pagehide', resetToGateOnAppClose);
-    window.addEventListener('beforeunload', resetToGateOnAppClose);
-    document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'hidden') resetToGateOnAppClose();
-    });
-    window.addEventListener('pageshow', function () {
-      if (!currentChurchId) showChurchGate();
-    });
   </script>
-
   <script>
     const browserPage = document.getElementById('browserPage');
     const browserBack = document.getElementById('browserBack');
@@ -737,82 +822,232 @@
     const browserShell = document.getElementById('browserShell');
     const browserZoomSurface = document.getElementById('browserZoomSurface');
     const loadingLayer = document.getElementById('loadingLayer');
+
     let currentUrl = '';
     let sheetZoom = 1;
-    let pinchStartDistance = 0;
-    let pinchStartZoom = 1;
+    let pinchState = null;
+    let pendingZoomFrame = null;
+    let pendingZoomPayload = null;
+    let gestureStartZoom = 1;
 
-    function isSpreadsheetUrl(url) { return /docs\.google\.com\/spreadsheets/.test(url || ''); }
+    function isSpreadsheetUrl(url) {
+      return /docs\.google\.com\/spreadsheets/.test(url || '');
+    }
+
     function prepareGoogleSheetUrl(url) {
       if (!isSpreadsheetUrl(url)) return url;
-      try { const parsed = new URL(url); if (!parsed.searchParams.has('rm')) parsed.searchParams.set('rm', 'minimal'); return parsed.toString(); } catch { return url; }
+      try {
+        const parsed = new URL(url);
+        if (!parsed.searchParams.has('rm')) parsed.searchParams.set('rm', 'minimal');
+        return parsed.toString();
+      } catch {
+        return url;
+      }
     }
-    function isMobileLayout() { return window.matchMedia && window.matchMedia('(max-width: 760px)').matches; }
-    function clampZoom(value) { return Math.max(0.55, Math.min(2.4, Number(value) || 1)); }
+
+    function isMobileLayout() {
+      return window.matchMedia && window.matchMedia('(max-width: 760px)').matches;
+    }
+
+    function clampZoom(value) {
+      return Math.max(0.50, Math.min(2.60, Number(value) || 1));
+    }
+
     function updateSheetZoomLabel() {
       if (sheetZoomFit) sheetZoomFit.textContent = Math.round(sheetZoom * 100) + '%';
     }
-    function applySheetZoom(value) {
-      sheetZoom = clampZoom(value);
+
+    function applySheetZoom(value, center) {
+      const oldZoom = sheetZoom || 1;
+      const nextZoom = clampZoom(value);
+      if (!Number.isFinite(nextZoom)) return;
+
+      if (center && browserShell) {
+        const rect = browserShell.getBoundingClientRect();
+        const pointX = center.x - rect.left + browserShell.scrollLeft;
+        const pointY = center.y - rect.top + browserShell.scrollTop;
+        const ratio = nextZoom / oldZoom;
+
+        sheetZoom = nextZoom;
+        browserShell.style.setProperty('--sheet-scale', String(sheetZoom));
+        updateSheetZoomLabel();
+
+        requestAnimationFrame(() => {
+          browserShell.scrollLeft = Math.max(0, pointX * ratio - (center.x - rect.left));
+          browserShell.scrollTop = Math.max(0, pointY * ratio - (center.y - rect.top));
+        });
+        return;
+      }
+
+      sheetZoom = nextZoom;
       if (browserShell) browserShell.style.setProperty('--sheet-scale', String(sheetZoom));
       updateSheetZoomLabel();
     }
-    function resetSheetZoom(url) {
-      // No celular, a planilha abre reduzida para caber melhor e mostrar abas como Entradas/Saídas.
-      applySheetZoom(isSpreadsheetUrl(url) && isMobileLayout() ? 0.72 : 1);
-      if (browserShell) { browserShell.scrollLeft = 0; browserShell.scrollTop = 0; }
+
+    function scheduleSheetZoom(value, center) {
+      pendingZoomPayload = { value, center };
+      if (pendingZoomFrame) return;
+
+      pendingZoomFrame = requestAnimationFrame(() => {
+        const payload = pendingZoomPayload;
+        pendingZoomPayload = null;
+        pendingZoomFrame = null;
+        if (payload) applySheetZoom(payload.value, payload.center);
+      });
     }
+
+    function resetSheetZoom(url) {
+      applySheetZoom(isSpreadsheetUrl(url) && isMobileLayout() ? 0.72 : 1);
+      if (browserShell) {
+        browserShell.scrollLeft = 0;
+        browserShell.scrollTop = 0;
+        browserShell.classList.remove('is-pinching');
+      }
+      pinchState = null;
+    }
+
     function distanceBetweenTouches(touches) {
+      if (!touches || touches.length < 2) return 0;
       const dx = touches[0].clientX - touches[1].clientX;
       const dy = touches[0].clientY - touches[1].clientY;
       return Math.sqrt(dx * dx + dy * dy);
     }
+
+    function centerBetweenTouches(touches) {
+      return {
+        x: (touches[0].clientX + touches[1].clientX) / 2,
+        y: (touches[0].clientY + touches[1].clientY) / 2
+      };
+    }
+
+    function canPinchSheet() {
+      return browserPage && browserPage.classList.contains('is-open') && browserPage.classList.contains('is-sheet');
+    }
+
+    function startPinch(event) {
+      if (!canPinchSheet() || !event.touches || event.touches.length < 2) return;
+
+      const distance = distanceBetweenTouches(event.touches);
+      if (!distance) return;
+
+      event.preventDefault();
+
+      pinchState = {
+        distance,
+        zoom: sheetZoom,
+        center: centerBetweenTouches(event.touches)
+      };
+
+      if (browserShell) browserShell.classList.add('is-pinching');
+    }
+
+    function movePinch(event) {
+      if (!canPinchSheet() || !event.touches || event.touches.length < 2) return;
+
+      const distance = distanceBetweenTouches(event.touches);
+      if (!distance) return;
+
+      event.preventDefault();
+
+      if (!pinchState) {
+        pinchState = { distance, zoom: sheetZoom, center: centerBetweenTouches(event.touches) };
+      }
+
+      const ratio = distance / Math.max(1, pinchState.distance);
+      const nextZoom = pinchState.zoom * ratio;
+      scheduleSheetZoom(nextZoom, centerBetweenTouches(event.touches));
+    }
+
+    function endPinch(event) {
+      if (event && event.touches && event.touches.length >= 2) return;
+      pinchState = null;
+      window.setTimeout(() => {
+        if (browserShell) browserShell.classList.remove('is-pinching');
+      }, 80);
+    }
+
+    function startGesture(event) {
+      if (!canPinchSheet()) return;
+      event.preventDefault();
+      gestureStartZoom = sheetZoom;
+      if (browserShell) browserShell.classList.add('is-pinching');
+    }
+
+    function changeGesture(event) {
+      if (!canPinchSheet()) return;
+      event.preventDefault();
+      scheduleSheetZoom(gestureStartZoom * (event.scale || 1), {
+        x: event.clientX || (window.innerWidth / 2),
+        y: event.clientY || (window.innerHeight / 2)
+      });
+    }
+
+    function endGesture(event) {
+      if (!canPinchSheet()) return;
+      if (event) event.preventDefault();
+      endPinch();
+    }
+
     function openBrowser(url, title, subtitle) {
       currentUrl = prepareGoogleSheetUrl(url);
       const sheetMode = isSpreadsheetUrl(url);
+
       browserPage.classList.toggle('is-sheet', sheetMode);
       resetSheetZoom(currentUrl);
+
       browserTitle.textContent = title || 'ADB Administrativo';
       browserSubtitle.textContent = sheetMode ? 'Planilha Google' : (subtitle || 'Abrindo dentro do app');
+
       loadingLayer.classList.add('is-visible');
       browserPage.classList.add('is-open');
       browserPage.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
+
       browserFrame.src = 'about:blank';
-      setTimeout(() => { browserFrame.src = currentUrl; }, 70);
+      window.setTimeout(() => { browserFrame.src = currentUrl; }, 70);
     }
+
     function closeBrowser() {
-      browserFrame.src = 'about:blank'; currentUrl = '';
-      browserPage.classList.remove('is-open', 'is-sheet'); browserPage.setAttribute('aria-hidden', 'true');
+      browserFrame.src = 'about:blank';
+      currentUrl = '';
+      browserPage.classList.remove('is-open', 'is-sheet');
+      browserPage.setAttribute('aria-hidden', 'true');
       resetSheetZoom('');
-      document.body.style.overflow = ''; loadingLayer.classList.remove('is-visible');
+      document.body.style.overflow = '';
+      loadingLayer.classList.remove('is-visible');
     }
-    function reloadBrowser() { if (!currentUrl) return; loadingLayer.classList.add('is-visible'); browserFrame.src = 'about:blank'; setTimeout(() => browserFrame.src = currentUrl, 50); }
+
+    function reloadBrowser() {
+      if (!currentUrl) return;
+      loadingLayer.classList.add('is-visible');
+      browserFrame.src = 'about:blank';
+      window.setTimeout(() => { browserFrame.src = currentUrl; }, 50);
+    }
+
     if (browserShell) {
-      browserShell.addEventListener('touchstart', function (event) {
-        if (!browserPage.classList.contains('is-sheet') || event.touches.length !== 2) return;
-        pinchStartDistance = distanceBetweenTouches(event.touches);
-        pinchStartZoom = sheetZoom;
-      }, { passive: false });
-      browserShell.addEventListener('touchmove', function (event) {
-        if (!browserPage.classList.contains('is-sheet') || event.touches.length !== 2 || !pinchStartDistance) return;
-        event.preventDefault();
-        const nextDistance = distanceBetweenTouches(event.touches);
-        applySheetZoom(pinchStartZoom * (nextDistance / pinchStartDistance));
-      }, { passive: false });
-      browserShell.addEventListener('touchend', function () {
-        if (!browserPage.classList.contains('is-sheet')) return;
-        pinchStartDistance = 0;
-      }, { passive: true });
+      browserShell.addEventListener('touchstart', startPinch, { passive: false });
+      browserShell.addEventListener('touchmove', movePinch, { passive: false });
+      browserShell.addEventListener('touchend', endPinch, { passive: true });
+      browserShell.addEventListener('touchcancel', endPinch, { passive: true });
+
+      // Eventos específicos do Safari/iOS. Ajudam quando o WebView trata a pinça como gesture.
+      browserShell.addEventListener('gesturestart', startGesture, { passive: false });
+      browserShell.addEventListener('gesturechange', changeGesture, { passive: false });
+      browserShell.addEventListener('gestureend', endGesture, { passive: false });
     }
+
     if (sheetZoomOut) sheetZoomOut.addEventListener('click', () => applySheetZoom(sheetZoom - 0.12));
     if (sheetZoomIn) sheetZoomIn.addEventListener('click', () => applySheetZoom(sheetZoom + 0.12));
     if (sheetZoomFit) sheetZoomFit.addEventListener('click', () => applySheetZoom(isMobileLayout() ? 0.72 : 1));
+
     browserBack.addEventListener('click', closeBrowser);
     browserReload.addEventListener('click', reloadBrowser);
     browserExternal.addEventListener('click', () => { if (currentUrl) window.open(currentUrl, '_blank', 'noopener'); });
-    browserFrame.addEventListener('load', () => setTimeout(() => loadingLayer.classList.remove('is-visible'), 350));
-    document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && browserPage.classList.contains('is-open')) closeBrowser(); });
+
+    browserFrame.addEventListener('load', () => window.setTimeout(() => loadingLayer.classList.remove('is-visible'), 350));
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && browserPage.classList.contains('is-open')) closeBrowser();
+    });
   </script>
 
   <script>
