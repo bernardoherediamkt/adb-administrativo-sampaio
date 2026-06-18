@@ -1,4 +1,4 @@
-const CACHE_NAME = 'adb-administrativo-mobile-header-safe-final-v16';
+const CACHE_NAME = 'adb-administrativo-mobile-topo-ajustado-v17';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png','./icons/icon-1024.png'];
 
 self.addEventListener('install', (event) => {

@@ -1,0 +1,7 @@
+ADB Administrativo Multi-Igrejas - Topo Mobile Ajustado
+
+Correção feita:
+- Reduzido o espaço exagerado acima do cabeçalho interno da igreja.
+- Mantida distância segura para hora, Wi‑Fi e bateria não embolarem com logo/nome/botão Trocar.
+- Alteração feita apenas no layout mobile.
+- Mantidos zoom por pinça, botões de zoom, Adam, Sheets API e comparativo financeiro.
