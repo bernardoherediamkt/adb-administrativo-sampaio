@@ -23,7 +23,8 @@ const CHURCHES = {
       { name: 'Março 2026 - Sampaio', id: '11irZSKrZQaIiNT78fLTAbp_WLrCCcOlKeUlcZVce7Hs', area: 'Controle Financeiro 2026', type: 'finance', month: 3, year: 2026 },
       { name: 'Abril 2026 - Sampaio', id: '1yHpksSYdCaXACUE16sb8gu2B1HZHySe1QqO0EJ1lnDc', area: 'Controle Financeiro 2026', type: 'finance', month: 4, year: 2026 },
       { name: 'Maio 2026 - Sampaio', id: '1wzhKhfRPRUa1ltTu3TTBliLm5c5611-qWniwrVxUfhk', area: 'Controle Financeiro 2026', type: 'finance', month: 5, year: 2026 },
-      { name: 'Junho 2026 - Sampaio', id: '1jCBvXixmjT1fhdjYkQSNj806bwUcsfh6bo_mhLLFwEU', area: 'Controle Financeiro 2026', type: 'finance', month: 6, year: 2026 }
+      { name: 'Junho 2026 - Sampaio', id: '1jCBvXixmjT1fhdjYkQSNj806bwUcsfh6bo_mhLLFwEU', area: 'Controle Financeiro 2026', type: 'finance', month: 6, year: 2026 },
+      { name: 'Julho 2026 - Sampaio', id: '1XGu_SdcaF-SuhJOOQFNvzUkYUV6S39y-9puRY01LMzg', area: 'Controle Financeiro 2026', type: 'finance', month: 7, year: 2026 }
     ]
   },
   saquarema: {
@@ -33,7 +34,8 @@ const CHURCHES = {
     envRoot: 'ADB_SAQUAREMA_ROOT_FOLDER_ID',
     knownSheets: [
       { name: 'Planilha de Membros - Saquarema', id: '1ZAzTXKlTEKsR8UsHkLenxrluZc2pAKvOXz8ylknOk9o', area: 'Secretaria', type: 'members' },
-      { name: 'Junho 2026 - Saquarema', id: '1ijOYDwj7FNf8L4L86kEUWkFJOPG-uyKqbr_LZiKKVUE', area: 'Controle Financeiro 2026', type: 'finance', month: 6, year: 2026 }
+      { name: 'Junho 2026 - Saquarema', id: '1ijOYDwj7FNf8L4L86kEUWkFJOPG-uyKqbr_LZiKKVUE', area: 'Controle Financeiro 2026', type: 'finance', month: 6, year: 2026 },
+      { name: 'Julho 2026 - Saquarema', id: '1zjzg3a_7nsI3YJngll-_4pg2beVzLWtjJGTRsr4Whcs', area: 'Controle Financeiro 2026', type: 'finance', month: 7, year: 2026 }
     ]
   },
   porto: {
@@ -43,7 +45,8 @@ const CHURCHES = {
     envRoot: 'ADB_PORTO_ROOT_FOLDER_ID',
     knownSheets: [
       { name: 'Planilha de Membros - Porto da Roça', id: '1avnGceb36i1Ohh3d-j5WBPOJMqFjBboSOxLOmt1WVSc', area: 'Secretaria', type: 'members' },
-      { name: 'Junho 2026 - Porto da Roça', id: '1hnFlwQSK8hwHybqqVcIqxIKz1ofeAs_1Nooki-Wk8OI', area: 'Controle Financeiro 2026', type: 'finance', month: 6, year: 2026 }
+      { name: 'Junho 2026 - Porto da Roça', id: '1hnFlwQSK8hwHybqqVcIqxIKz1ofeAs_1Nooki-Wk8OI', area: 'Controle Financeiro 2026', type: 'finance', month: 6, year: 2026 },
+      { name: 'Julho 2026 - Porto da Roça', id: '1cSqHXlC6JA5FUSueY8176jEA4IBMqGJ-2M6jIBoK_N0', area: 'Controle Financeiro 2026', type: 'finance', month: 7, year: 2026 }
     ]
   }
 };

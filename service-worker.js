@@ -1,4 +1,4 @@
-const CACHE_NAME = 'adb-administrativo-adam-financeiro-exato-v19';
+const CACHE_NAME = 'adb-administrativo-julho-2026-v20';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png','./icons/icon-1024.png'];
 
 self.addEventListener('install', (event) => {

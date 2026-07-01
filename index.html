@@ -715,7 +715,7 @@
       ['Abril 2026', 'https://docs.google.com/spreadsheets/d/1yHpksSYdCaXACUE16sb8gu2B1HZHySe1QqO0EJ1lnDc/edit?usp=sharing'],
       ['Maio 2026', 'https://docs.google.com/spreadsheets/d/1wzhKhfRPRUa1ltTu3TTBliLm5c5611-qWniwrVxUfhk/edit?usp=sharing'],
       ['Junho 2026', 'https://docs.google.com/spreadsheets/d/1jCBvXixmjT1fhdjYkQSNj806bwUcsfh6bo_mhLLFwEU/edit?usp=sharing'],
-      ['Julho 2026', ''], ['Agosto 2026', ''], ['Setembro 2026', ''], ['Outubro 2026', ''], ['Novembro 2026', ''], ['Dezembro 2026', '']
+      ['Julho 2026', 'https://docs.google.com/spreadsheets/d/1XGu_SdcaF-SuhJOOQFNvzUkYUV6S39y-9puRY01LMzg/edit?usp=sharing'], ['Agosto 2026', ''], ['Setembro 2026', ''], ['Outubro 2026', ''], ['Novembro 2026', ''], ['Dezembro 2026', '']
     ];
 
     const CHURCHES = {
@@ -740,7 +740,7 @@
         theme: { accent: '#a62d2d', accentDark: '#761f1f', accentSoft: '#e3b6b2' },
         logoRound: ASSETS.logo_sede_round, gateLogo: ASSETS.logo_sede_round, fullLogo: ASSETS.logo_sede_full,
         folders: { finance: 'Dep Financeiro - Saquarema', docs: 'Documentos & Comprovantes - Saquarema', forms: 'Formulários - Saquarema', sheets: 'Planilhas - Saquarema', media: '' },
-        links: { calendar: CALENDAR_ADB, entryForm: 'https://forms.gle/LhLP1chD9uSgpV4m8', exitForm: 'https://forms.gle/HVd5H5CciV66Md8c9', memberForm: 'https://forms.gle/aSASakWjbNz8Y7Xy8', memberSheet: 'https://docs.google.com/spreadsheets/d/1ZAzTXKlTEKsR8UsHkLenxrluZc2pAKvOXz8ylknOk9o/edit?usp=sharing', documents: '', photos: '', juneSheet: 'https://docs.google.com/spreadsheets/d/1ijOYDwj7FNf8L4L86kEUWkFJOPG-uyKqbr_LZiKKVUE/edit?usp=sharing' },
+        links: { calendar: CALENDAR_ADB, entryForm: 'https://forms.gle/LhLP1chD9uSgpV4m8', exitForm: 'https://forms.gle/HVd5H5CciV66Md8c9', memberForm: 'https://forms.gle/aSASakWjbNz8Y7Xy8', memberSheet: 'https://docs.google.com/spreadsheets/d/1ZAzTXKlTEKsR8UsHkLenxrluZc2pAKvOXz8ylknOk9o/edit?usp=sharing', documents: '', photos: '', juneSheet: 'https://docs.google.com/spreadsheets/d/1ijOYDwj7FNf8L4L86kEUWkFJOPG-uyKqbr_LZiKKVUE/edit?usp=sharing', julySheet: 'https://docs.google.com/spreadsheets/d/1zjzg3a_7nsI3YJngll-_4pg2beVzLWtjJGTRsr4Whcs/edit?usp=sharing' },
         months: []
       },
       porto: {
@@ -748,7 +748,7 @@
         theme: { accent: '#2566a8', accentDark: '#173e70', accentSoft: '#b7d3ee' },
         logoRound: ASSETS.logo_porto_round, gateLogo: ASSETS.logo_porto_round, fullLogo: ASSETS.logo_porto_full,
         folders: { finance: 'Dep Financeiro - Porto da Roça', docs: 'Documentos & Comprovantes - Porto da Roça', forms: 'Formulários - Porto da Roça', sheets: 'Planilhas - Porto da Roça', media: '' },
-        links: { calendar: CALENDAR_ADB, entryForm: 'https://forms.gle/vFcaEbH8V78gF5Ky5', exitForm: 'https://forms.gle/3o5S7PFDAFp4bH6m8', memberForm: 'https://forms.gle/qCJJ8sbeRCScQHGMA', memberSheet: 'https://docs.google.com/spreadsheets/d/1avnGceb36i1Ohh3d-j5WBPOJMqFjBboSOxLOmt1WVSc/edit?usp=sharing', documents: '', photos: '', juneSheet: 'https://docs.google.com/spreadsheets/d/1hnFlwQSK8hwHybqqVcIqxIKz1ofeAs_1Nooki-Wk8OI/edit?usp=sharing' },
+        links: { calendar: CALENDAR_ADB, entryForm: 'https://forms.gle/vFcaEbH8V78gF5Ky5', exitForm: 'https://forms.gle/3o5S7PFDAFp4bH6m8', memberForm: 'https://forms.gle/qCJJ8sbeRCScQHGMA', memberSheet: 'https://docs.google.com/spreadsheets/d/1avnGceb36i1Ohh3d-j5WBPOJMqFjBboSOxLOmt1WVSc/edit?usp=sharing', documents: '', photos: '', juneSheet: 'https://docs.google.com/spreadsheets/d/1hnFlwQSK8hwHybqqVcIqxIKz1ofeAs_1Nooki-Wk8OI/edit?usp=sharing', julySheet: 'https://docs.google.com/spreadsheets/d/1cSqHXlC6JA5FUSueY8176jEA4IBMqGJ-2M6jIBoK_N0/edit?usp=sharing' },
         months: []
       }
     };
@@ -805,10 +805,11 @@
     function months2026ForChurch(church) {
       if (church.id === 'sampaio') return MONTHS_2026_SAMPAIO;
       const juneUrl = getChurchLink(church, 'juneSheet', '');
+      const julyUrl = getChurchLink(church, 'julySheet', '');
       return [
         ['Janeiro 2026', ''], ['Fevereiro 2026', ''], ['Março 2026', ''], ['Abril 2026', ''], ['Maio 2026', ''],
         ['Junho 2026', juneUrl],
-        ['Julho 2026', ''], ['Agosto 2026', ''], ['Setembro 2026', ''], ['Outubro 2026', ''], ['Novembro 2026', ''], ['Dezembro 2026', '']
+        ['Julho 2026', julyUrl], ['Agosto 2026', ''], ['Setembro 2026', ''], ['Outubro 2026', ''], ['Novembro 2026', ''], ['Dezembro 2026', '']
       ];
     }
 

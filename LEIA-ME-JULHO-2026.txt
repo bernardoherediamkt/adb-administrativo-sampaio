@@ -1,0 +1,13 @@
+ADB Administrativo Multi-Igrejas - Julho 2026
+
+Alterações:
+- Habilitado botão Julho 2026 no Controle Financeiro da ADB Sampaio.
+- Habilitado botão Julho 2026 no Controle Financeiro da ADB Saquarema.
+- Habilitado botão Julho 2026 no Controle Financeiro da ADB Porto da Roça.
+- Adicionadas as três planilhas de Julho 2026 no contexto fixo do Adam para consultas financeiras.
+- Mantidas as correções anteriores do layout mobile, zoom por pinça e Adam financeiro.
+
+Planilhas:
+- Julho 2026 - Sampaio
+- Julho 2026 - Saquarema
+- Julho 2026 - Porto da Roça
